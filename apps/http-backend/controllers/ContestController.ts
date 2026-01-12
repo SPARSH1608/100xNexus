@@ -9,7 +9,7 @@ declare global {
 }
 export const createContest = async (req: Request, res: Response) => {
     try {
-        let { title, isOpenAll, startTime, duration, questions , batches } = req.body;
+        let { title, isOpenAll, startTime, duration  } = req.body;
         const userId = req.userId
 
         const existingContest = await prisma.contest.findFirst({
@@ -30,8 +30,6 @@ export const createContest = async (req: Request, res: Response) => {
                 isOpenAll,
                 startTime,
                 duration,
-                questions,
-                batches,
                 status:'DRAFT'
 
             }

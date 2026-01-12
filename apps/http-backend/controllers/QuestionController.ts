@@ -2,7 +2,8 @@ import { type Response, type Request } from "express"
 import { prisma } from "@repo/db"
 export const createQuestion = async (req: Request, res: Response) => {
     try {
-        const contestId = req.params.id;
+        
+        let { contestId,title, description, score, options } = req.body
         if (!contestId) {
             res.status(404).json({
                 success: false,
@@ -10,8 +11,6 @@ export const createQuestion = async (req: Request, res: Response) => {
             })
             return;
         }
-
-        let { title, description, score, options } = req.body
         let existingContest = await prisma.contest.findFirst({
             where: {
                 id: contestId
@@ -61,6 +60,7 @@ export const updateQuestion =async (req: Request, res: Response) => {
     try {
         const questionId=req.params.id
         let {options,...questionFields}=req.body
+        console.log('req',req.body)
         if (!questionId) {
             res.status(400).json({
                 success: false,
@@ -119,19 +119,40 @@ export const updateQuestion =async (req: Request, res: Response) => {
 }
 export const DeleteQuestion = async (req: Request, res: Response) => {
     try {
-        const contestId = req.params.id;
-        if (!contestId) {
+        const questionId = req.params.id;
+        if (!questionId) {
             res.status(404).json({
                 success: false,
-                error: 'contestId not provided'
+                error: 'questionId not provided'
             })
             return;
         }
-        await prisma.question.delete({
-            where: {
-                id: contestId
-            }
+        const existingQuestion = await prisma.question.findUnique({
+            where: { id: questionId },
+          });
+      
+          if (!existingQuestion) {
+            return res.status(404).json({
+              success: false,
+              error: "Question not found",
+            });
+          }
+        await prisma.$transaction(async(tx)=>{
+            await tx.option.deleteMany({
+                where:{
+                    questionId
+                }
+            })
+            await tx.question.delete({
+                where: {
+                    id: questionId
+                }
+            })
         })
+        res.status(200).json({
+            success: true,
+            message: "Question deleted successfully",
+          });
 
     } catch (error) {
         console.log('error while deleting questions', error)
@@ -144,7 +165,11 @@ export const DeleteQuestion = async (req: Request, res: Response) => {
 }
 export const getAllQuestions =async (req: Request, res: Response) => {
     try {
-        let questions=await prisma.question.findMany({});
+        let questions=await prisma.question.findMany({
+            include:{
+                options:true
+            }
+        });
         res.status(200).json({
             success:true,
             data:questions,
@@ -172,6 +197,9 @@ export const getQuestionsByContestId = async(req: Request, res: Response) => {
         let questions=await prisma.question.findMany({
             where:{
                 contestId
+            },
+            include:{
+                options:true
             }
         })
         res.status(200).json({
