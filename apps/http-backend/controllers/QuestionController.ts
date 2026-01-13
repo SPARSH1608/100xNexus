@@ -57,6 +57,7 @@ export const createQuestion = async (req: Request, res: Response) => {
             })
             return question
         })
+        await recalculateEndTime(contestId,res)
         res.status(201).json({
             data: q,
             message: 'question created successfully',
@@ -127,6 +128,7 @@ export const updateQuestion = async (req: Request, res: Response) => {
             })
             return q;
         })
+        await recalculateEndTime(existingQuestion.contest.id,res)
         res.status(200).json({
             success: true,
             data: updatedQuestion,
@@ -212,6 +214,7 @@ export const DeleteQuestion = async (req: Request, res: Response) => {
             }
             )
         })
+        await recalculateEndTime(contest.id,res)
         res.status(200).json({
             success: true,
             message: "Question deleted successfully",
@@ -363,6 +366,41 @@ export const updateQuestionIndexing = async (req: Request, res: Response) => {
         console.log('Something went wrong while ordering questions', error)
         return res.status(500).json({
             success: false,
+            error
+        })
+    }
+}
+const recalculateEndTime=async(contestId:string,res:Response)=>{
+    try {
+        console.log('recalculating endTime',contestId)
+        const contest=await prisma.contest.findFirst({
+            where:{
+                id:contestId
+            },
+            include:{
+                questions:true
+            }
+        })
+        if(!contest){
+            return res.status(409).json({
+                success: false,
+                error: 'A contest with this contestId does not exist'
+            })
+        }
+        const totalTime=contest.questions.reduce((sum,q)=>{
+            console.log('sum and q',sum,q)
+           return q.timeLimit+sum},0)
+        const endTime = new Date(
+            contest.startTime.getTime() + totalTime * 1000
+          )
+          await prisma.contest.update({
+            where:{id:contestId},
+            data:{endTime}
+          })
+    } catch (error) {
+        console.log('something went wrong while calculating endtime',error)
+        return res.status(500).json({
+            success:false,
             error
         })
     }

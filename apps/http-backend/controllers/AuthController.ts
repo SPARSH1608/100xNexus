@@ -73,7 +73,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 error: 'Wrong credentials'
             })
         }
-        const token = jwt.sign({ userId: user!.id }, process.env.SECRET!, { expiresIn: '1h' })
+        const token = jwt.sign({ userId: user!.id }, process.env.SECRET!, { expiresIn: '1d' })
         res.status(200).json({
             success: true,
             data: token,
