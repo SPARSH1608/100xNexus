@@ -61,6 +61,7 @@ export const AdminMiddleware=async(req:Request,res:Response,next:NextFunction)=>
                 role:true
             }
         }) 
+        console.log('user',user)
         if(!user || user.role!=='ADMIN'){
             res.status(403).json({
                 success:false,

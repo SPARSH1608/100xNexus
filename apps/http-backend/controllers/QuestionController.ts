@@ -2,8 +2,8 @@ import { type Response, type Request } from "express"
 import { prisma } from "@repo/db"
 export const createQuestion = async (req: Request, res: Response) => {
     try {
-        
-        let { contestId,title, description, score, options } = req.body
+
+        let { contestId, title, description, score, options, timeLimit } = req.body
         if (!contestId) {
             res.status(404).json({
                 success: false,
@@ -23,28 +23,44 @@ export const createQuestion = async (req: Request, res: Response) => {
             })
             return
         }
+        if (existingContest.status == 'LIVE' || existingContest.status == 'FINISHED') {
+            return res.status(403).json({
+                success: false,
+                error: 'Cannot add questions to a live or finished contest'
+            })
+        }
         description = description == null ? "" : description;
-        const question = await prisma.question.create({
-            data: {
-                title,
-                description,
-                score,
-                contestId,
-                options: {
-                    create: options.map((opt: { title: string, isCorrect: boolean }) => ({
-                        title: opt.title,
-                        isCorrect: opt.isCorrect
-                    }))
+        const q = await prisma.$transaction(async (tx) => {
+            let last = await tx.question.aggregate({
+                where: { contestId },
+                _max: { orderIndex: true }
+            })
+            const nextOrderIndex = (last._max.orderIndex ?? 0) + 1;
+            const question = await tx.question.create({
+                data: {
+                    title,
+                    description,
+                    score,
+                    contestId,
+                    timeLimit,
+                    orderIndex: nextOrderIndex,
+                    options: {
+                        create: options.map((opt: { title: string, isCorrect: boolean }) => ({
+                            title: opt.title,
+                            isCorrect: opt.isCorrect
+                        }))
+                    }
+                },
+                include: {
+                    options: true
                 }
-            },
-            include: {
-                options: true
-            }
+            })
+            return question
         })
-        res.status(200).json({
-            data:question,
-            message:'question created successfully',
-            success:true
+        res.status(201).json({
+            data: q,
+            message: 'question created successfully',
+            success: true
         })
         return
     } catch (error) {
@@ -56,11 +72,11 @@ export const createQuestion = async (req: Request, res: Response) => {
         return
     }
 }
-export const updateQuestion =async (req: Request, res: Response) => {
+export const updateQuestion = async (req: Request, res: Response) => {
     try {
-        const questionId=req.params.id
-        let {options,...questionFields}=req.body
-        console.log('req',req.body)
+        const questionId = req.params.id
+        let { options, ...questionFields } = req.body
+        console.log('req', req.body)
         if (!questionId) {
             res.status(400).json({
                 success: false,
@@ -68,46 +84,55 @@ export const updateQuestion =async (req: Request, res: Response) => {
             })
             return;
         }
-        const existingQuestion=await prisma.question.findFirst({
-            where:{
-                id:questionId
+        const existingQuestion = await prisma.question.findFirst({
+            where: {
+                id: questionId
+            }, include: {
+                contest: true
             }
         })
-        if(!existingQuestion){
-            res.status(404).json({
-                error:"Question not found",
-                success:false
+        if (!existingQuestion) {
+            return res.status(404).json({
+                error: "Question not found",
+                success: false
             })
         }
-        const questionData=Object.fromEntries(Object.entries(questionFields).filter((_,value)=>value!==undefined))
-        const updatedQuestion=await prisma.$transaction(async(tx)=>{
-            const q=await tx.question.update({
-                where:{id:questionId},
-                data:questionData
+        if (
+            existingQuestion.contest.status === "LIVE" ||
+            existingQuestion.contest.status === "FINISHED"
+        ) {
+            return res.status(403).json({
+                success: false,
+                error: "Cannot update question in a live or finished contest",
             })
-            if(Array.isArray(options)){
-                await tx.option.deleteMany({
-                    where:{
-                        questionId
-                    }
-                })
-                let opts=await tx.option.createMany({
-                    data:options.map((opt:{title:string,isCorrect:boolean})=>({
-                        title:opt.title,
-                        isCorrect:opt.isCorrect,
-                        questionId
-                    }))
-                })
-            }
+        }
+
+        const questionData = Object.fromEntries(Object.entries(questionFields).filter((_, value) => value !== undefined))
+        const updatedQuestion = await prisma.$transaction(async (tx) => {
+            const q = await tx.question.update({
+                where: { id: questionId },
+                data: {
+                    ...questionData,
+                    options: Array.isArray(options) ? {
+                        deleteMany: {},
+                        create: options.map((opt: { title: string, isCorrect: boolean }) => ({
+                            title: opt.title,
+                            isCorrect: opt.isCorrect
+                        }))
+                    } : undefined
+                },
+                select: {
+                    options: true
+                }
+            })
             return q;
-            
         })
         res.status(200).json({
-            success:true,
-            data:updatedQuestion,
-            message:'question updated successfully'
+            success: true,
+            data: updatedQuestion,
+            message: 'question updated successfully'
         })
-    
+
     } catch (error) {
         console.log('error while updating questions', error)
         res.status(500).json({
@@ -129,17 +154,41 @@ export const DeleteQuestion = async (req: Request, res: Response) => {
         }
         const existingQuestion = await prisma.question.findUnique({
             where: { id: questionId },
-          });
-      
-          if (!existingQuestion) {
+            select: {
+                orderIndex: true,
+                contestId: true,
+
+            }
+        });
+
+        if (!existingQuestion) {
             return res.status(404).json({
-              success: false,
-              error: "Question not found",
+                success: false,
+                error: "Question not found",
             });
-          }
-        await prisma.$transaction(async(tx)=>{
+        }
+        const contest = await prisma.contest.findUnique({
+            where: {
+                id: existingQuestion.contestId
+            }
+        })
+
+        if (!contest) {
+            return res.status(404).json({
+                success: false,
+                error: "Contest not found",
+            })
+        }
+
+        if (contest.status === "LIVE" || contest.status === "FINISHED") {
+            return res.status(403).json({
+                success: false,
+                error: "Cannot delete question from live or finished contest",
+            })
+        }
+        await prisma.$transaction(async (tx) => {
             await tx.option.deleteMany({
-                where:{
+                where: {
                     questionId
                 }
             })
@@ -148,11 +197,25 @@ export const DeleteQuestion = async (req: Request, res: Response) => {
                     id: questionId
                 }
             })
+            await tx.question.updateMany({
+                where: {
+                    contestId: existingQuestion.contestId,
+                    orderIndex: {
+                        gt: existingQuestion.orderIndex
+                    },
+                },
+                data: {
+                    orderIndex: {
+                        decrement: 1
+                    }
+                }
+            }
+            )
         })
         res.status(200).json({
             success: true,
             message: "Question deleted successfully",
-          });
+        });
 
     } catch (error) {
         console.log('error while deleting questions', error)
@@ -163,17 +226,17 @@ export const DeleteQuestion = async (req: Request, res: Response) => {
         return
     }
 }
-export const getAllQuestions =async (req: Request, res: Response) => {
+export const getAllQuestions = async (req: Request, res: Response) => {
     try {
-        let questions=await prisma.question.findMany({
-            include:{
-                options:true
+        let questions = await prisma.question.findMany({
+            include: {
+                options: true
             }
         });
         res.status(200).json({
-            success:true,
-            data:questions,
-            message:'All questions fetched successfully'
+            success: true,
+            data: questions,
+            message: 'All questions fetched successfully'
         })
     } catch (error) {
         console.log('error while fetching all questions ', error)
@@ -184,9 +247,9 @@ export const getAllQuestions =async (req: Request, res: Response) => {
         return
     }
 }
-export const getQuestionsByContestId = async(req: Request, res: Response) => {
+export const getQuestionsByContestId = async (req: Request, res: Response) => {
     try {
-        let contestId=req.params.id;
+        let contestId = req.params.id;
         if (!contestId) {
             res.status(404).json({
                 success: false,
@@ -194,18 +257,18 @@ export const getQuestionsByContestId = async(req: Request, res: Response) => {
             })
             return;
         }
-        let questions=await prisma.question.findMany({
-            where:{
+        let questions = await prisma.question.findMany({
+            where: {
                 contestId
             },
-            include:{
-                options:true
+            include: {
+                options: true
             }
         })
         res.status(200).json({
-            data:questions,
-            success:true,
-            message:'Questions fetched successfully'
+            data: questions,
+            success: true,
+            message: 'Questions fetched successfully'
         })
     } catch (error) {
         console.log('error while fetching questions for a contest', error)
@@ -214,5 +277,93 @@ export const getQuestionsByContestId = async(req: Request, res: Response) => {
             error,
         })
         return
+    }
+}
+
+export const updateQuestionIndexing = async (req: Request, res: Response) => {
+    try {
+        const contestId = req.params.id
+        if (!contestId) {
+            res.status(404).json({
+                success: false,
+                error: 'contestId not provided'
+            })
+            return;
+        }
+        let existingContest = await prisma.contest.findFirst({
+            where: {
+                id: contestId
+            }
+        })
+        if (!existingContest) {
+            res.status(409).json({
+                success: false,
+                error: 'A contest with this contestId does not exist'
+            })
+            return
+        }
+        if (existingContest.status == 'LIVE' || existingContest.status == 'FINISHED') {
+            return res.status(403).json({
+                success: false,
+                error: 'Cannot re arrange questions in a live or finished contest'
+            })
+        }
+
+        const { questionIds } = req.body;
+        console.log('questionIds', questionIds)
+        if (!Array.isArray(questionIds) || questionIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: "questionIds must be a non-empty array",
+            })
+        }
+
+        const questions = await prisma.question.findMany({
+            where: { contestId },
+            select: { id: true }
+        })
+
+        const questionIdSet = new Set(questions.map(q => q.id))
+
+        if (
+            questionIds.length !== questions.length ||
+            !questionIds.every((id: string) => questionIdSet.has(id))
+        ) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid questionIds array",
+            })
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.question.updateMany({
+                where: {
+                    contestId
+
+                },
+                data: { orderIndex: -1 }
+            })
+            await Promise.all(
+                questionIds.map((id: string, index: number) =>
+                    tx.question.update({
+                        where: { id },
+                        data: { orderIndex: index + 1 }
+                    })
+                )
+            )
+        })
+
+
+        return res.status(200).json({
+            success: true,
+            data: [],
+            message: 'Ordering changed successfully'
+        })
+    } catch (error) {
+        console.log('Something went wrong while ordering questions', error)
+        return res.status(500).json({
+            success: false,
+            error
+        })
     }
 }

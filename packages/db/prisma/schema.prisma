@@ -41,20 +41,27 @@ model User {
   role     UserRoles @default(CANDIDATE)
   batches  Batch[]   @relation("UserBatches")
   contests Contest[]
+  quizSubmissions QuizSubmission[]
+  results QuizResult[]
+  quizParticipants QuizParticipant[]
 }
 
 model Contest {
   id        String        @id @default(cuid())
   title     String
   userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  batches   Batch[]       @relation("ContestBatches")
   isOpenAll Boolean       @default(true)
   startTime DateTime      @default(now())
-  duration  Int
-  isDeleted Boolean 
+  endTime DateTime?
   status    ContestStatus @default(DRAFT)
+  
+  joinCode String? @unique
   questions Question[]
+  participants QuizParticipant[]
+  results QuizResult[]
+  submissions QuizSubmission[]
+  user      User          @relation(fields: [userId], references: [id])
+  batches   Batch[]       @relation("ContestBatches")
 }
 
 model Question {
@@ -64,9 +71,49 @@ model Question {
   score       Int
   options     Option[]
   contestId   String
+  orderIndex Int
+  timeLimit Int
   contest     Contest  @relation(fields: [contestId], references: [id])
+  submissions QuizSubmission[]
+ 
+
 }
 
+model QuizSubmission{
+  id String @id @default(cuid())
+  userId String
+  contestId String
+  questionId String
+  answer Json
+  score Int
+  submittedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  contest     Contest  @relation(fields: [contestId], references: [id])
+  question    Question @relation(fields: [questionId], references: [id])
+  @@unique([userId,questionId])
+}
+model QuizParticipant {
+  contestId String
+  userId String
+  
+  joinedAt DateTime @default(now())
+  
+  contest Contest @relation(fields: [contestId],references: [id])
+  user User @relation(fields: [userId],references: [id])
+  
+  @@id([contestId,userId])
+}
+model QuizResult{
+  contestId String
+  userId String
+  finalScore Int
+  rank Int
+  contest Contest @relation(fields: [contestId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  generatedAt DateTime @default(now())
+  @@id([contestId,userId])
+}
 model Option {
   id         String   @id @default(cuid())
   title      String

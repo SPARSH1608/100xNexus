@@ -5,7 +5,7 @@ import { prisma } from '@repo/db'
 import jwt from 'jsonwebtoken'
 export const signupUser = async (req: Request, res: Response) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password ,role} = req.body;
         const isRegistered = await prisma.user.findFirst({
             where: {
                 email
@@ -23,6 +23,7 @@ export const signupUser = async (req: Request, res: Response) => {
             data: {
                 name,
                 email,
+                role,
                 password: hashedPassword,
             },
             select:{
