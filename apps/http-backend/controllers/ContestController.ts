@@ -11,6 +11,7 @@ declare global {
 export const createContest = async (req: Request, res: Response) => {
     try {
         let { title, isOpenAll, startTime, batchIds } = req.body;
+        console.log('create contest', req.body)
         const userId = req.userId
 
         const existingContest = await prisma.contest.findFirst({
@@ -84,8 +85,9 @@ export const createContest = async (req: Request, res: Response) => {
 export const updateContest = async (req: Request, res: Response) => {
     try {
         const contestId = req.params.id;
+        console.log("update contest payload", req.body);
 
-        let existingContest = await prisma.contest.findFirst({
+        const existingContest = await prisma.contest.findFirst({
             where: {
                 id: contestId
             }
@@ -95,23 +97,41 @@ export const updateContest = async (req: Request, res: Response) => {
                 success: false,
                 error: 'A contest with this contestId does not exist'
             })
+            return;
         }
-        let updateData = Object.fromEntries(Object.entries(req.body).filter((_, value) => value != undefined))
-        console.log('data to update', updateData)
+
+        const { title, isOpenAll, startTime, batchIds } = req.body;
+
+        const updateData: any = {};
+        if (title !== undefined) updateData.title = title;
+        if (startTime !== undefined) updateData.startTime = startTime;
+        if (isOpenAll !== undefined) updateData.isOpenAll = isOpenAll;
+
+        if (isOpenAll === true) {
+            updateData.batches = { set: [] };
+        } else if (isOpenAll === false || (isOpenAll === undefined && !existingContest.isOpenAll)) {
+            if (batchIds && Array.isArray(batchIds)) {
+                updateData.batches = {
+                    set: batchIds.map((id: string) => ({ id }))
+                };
+            }
+        }
+
         const contest = await prisma.contest.update({
             where: {
                 id: contestId
-            }, data: updateData
+            },
+            data: updateData
         })
-        res.status(200).json({
+
+        return res.status(200).json({
             success: true,
-            data: updateData,
+            data: contest,
             message: 'Contest updated successfully'
         })
-        return
     } catch (error) {
-        console.log('error while creating contest', error)
-        res.status(500).json({
+        console.log('error while updating contest', error)
+        return res.status(500).json({
             success: false,
             error: error
         })
@@ -171,7 +191,15 @@ export const getContest = async (req: Request, res: Response) => {
 }
 export const getAllContest = async (req: Request, res: Response) => {
     try {
-        let contests = await prisma.contest.findMany({}) || []
+        let contests = await prisma.contest.findMany({
+            include: {
+                _count: {
+                    select: {
+                        questions: true
+                    }
+                }
+            }
+        })
         res.status(200).json({
             success: true,
             data: contests,

@@ -1,7 +1,7 @@
 "use client";
 
-import { useBatchStore } from "../store";
-import Navbar from "../components/layout/navbar";
+import { useBatchStore } from "../../store";
+import Navbar from "../../components/layout/navbar";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";

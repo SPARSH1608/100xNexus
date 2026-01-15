@@ -13,6 +13,7 @@ type SuccessResponse = {
 type Response = SuccessResponse | ErrorResponse
 const BASE_URL = 'http://localhost:3001'
 
+// -------------------------------------AUTH-------------------------------------
 export const SignupAPI = async (name: string, email: string, password: string) => {
     console.log('name', name)
     console.log('email', email)
@@ -56,6 +57,9 @@ export const LoginAPI = async (email: string, password: string) => {
     }
     return response.data
 }
+
+
+// -------------------------------------BATCH-------------------------------------
 export const createBatchAPI = async (name: string) => {
     const token = useAuthStore.getState().token
     console.log('token', token, name)
@@ -129,6 +133,147 @@ export const deleteBatchAPI = async (batchId: string) => {
         }
     )
     console.log('response', response)
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+
+// -------------------------------------CONTEST-------------------------------------
+
+export const createContestAPI = async (title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
+    const token = useAuthStore.getState().token
+    console.log('token', token, title)
+    const response = await axios.post(
+        `${BASE_URL}/contest`,
+        {
+            title, isOpenAll, startTime, batchIds
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const updateContestAPI = async (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
+    const token = useAuthStore.getState().token
+    console.log('token', token, title)
+    const response = await axios.patch(
+        `${BASE_URL}/contest/${contestId}`,
+        {
+            title, isOpenAll, startTime, batchIds
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const deleteContestAPI = async (contestId: string) => {
+    const token = useAuthStore.getState().token
+    console.log('token', token)
+    console.log('contestId', contestId)
+    const response = await axios.delete(
+        `${BASE_URL}/contest/${contestId}`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+    console.log('response', response)
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+    
+export const getContestByIdAPI = async (contestId: string) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/${contestId}`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+
+export const getAllContestsAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/all`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+
+export const getLiveContestsAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/live`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const getUpcomingContestsAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/upcoming`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
     if (!response.data.success) {
         throw new Error(response.data.error)
     }
