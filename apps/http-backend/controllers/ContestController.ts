@@ -166,6 +166,14 @@ export const getContest = async (req: Request, res: Response) => {
         const existingContest = await prisma.contest.findFirst({
             where: {
                 id: contestId
+            },
+            include: {
+                batches: true,
+                questions: {
+                    include: {
+                        options: true
+                    }
+                }
             }
         })
         if (!existingContest) {

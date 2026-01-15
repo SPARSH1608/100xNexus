@@ -5,8 +5,9 @@ import { useBatchStore, useContestStore } from "../../store"
 import { createContestAPI, deleteContestAPI, updateContestAPI } from "../../api"
 import { toast, ToastContainer } from "react-toastify"
 import Navbar from "../../components/layout/navbar"
-import { Plus, Trash2, Edit2, Calendar, Clock, CheckCircle2, XCircle, Search, Trophy, Shield, Zap, Target } from "lucide-react"
+import { Plus, Trash2, Edit2, Calendar, Clock, CheckCircle2, XCircle, Search, Trophy, Shield, Zap, Target, Check } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useRouter } from "next/navigation"
 
 // Modal Component
 const Modal = ({ children, onClose, title }: { children: React.ReactNode, onClose: () => void, title: string }) => (
@@ -36,8 +37,18 @@ export default function Contests() {
     const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([])
     const [isOpenAll, setIsOpenAll] = useState(false)
     const [isUpdateContestModalOpen, setIsUpdateContestModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [contestIdToDelete, setContestIdToDelete] = useState<string | null>(null)
     const [contest, setContest] = useState<any>({})
     const [searchTerm, setSearchTerm] = useState("")
+    const router = useRouter()
+    const toggleBatch = (batchId: string) => {
+        setSelectedBatchIds(prev =>
+            prev.includes(batchId)
+                ? prev.filter(id => id !== batchId)
+                : [...prev, batchId]
+        )
+    }
 
     const handleCreateContest = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
@@ -58,12 +69,18 @@ export default function Contests() {
         }
     };
 
-    const handleDeleteContest = async (contestId: string) => {
-        if (!confirm("Are you sure you want to delete this battle? This action cannot be undone.")) return;
+    const handleDeleteContest = (contestId: string) => {
+        setContestIdToDelete(contestId)
+        setIsDeleteModalOpen(true)
+    }
+
+    const executeDelete = async () => {
+        if (!contestIdToDelete) return;
         try {
-            const res = await deleteContest(contestId);
+            const res = await deleteContest(contestIdToDelete);
             toast.success(res.message);
             getContests()
+            setIsDeleteModalOpen(false)
         } catch (error: any) {
             console.log(error);
             toast.error(error.message || 'Failed to delete contest');
@@ -71,12 +88,12 @@ export default function Contests() {
     }
     const handleOpenUpdateContest = async (contestId: string) => {
         try {
-            const contestData = getContestById(contestId);
+            const contestData = await getContestById(contestId);
             if (contestData) {
                 setContest(contestData);
                 setIsOpenAll(contestData.isOpenAll);
-                if (contestData.associatedBatches) {
-                    setSelectedBatchIds(contestData.associatedBatches.map((b: any) => b.batchId))
+                if (contestData.batches) {
+                    setSelectedBatchIds(contestData.batches.map((b: any) => b.id))
                 }
                 setIsUpdateContestModalOpen(true)
             }
@@ -175,6 +192,7 @@ export default function Contests() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 transition={{ delay: index * 0.05 }}
+                                onClick={() => router.push(`/contests/${contest.id}`)}
                                 className="group bg-[#050505]/80 backdrop-blur-md border border-white/10 hover:border-brand-red/30 rounded-2xl p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-red/5 relative overflow-hidden"
                             >
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-brand-red/10 transition-all" />
@@ -185,13 +203,19 @@ export default function Contests() {
                                     </div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleOpenUpdateContest(contest.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenUpdateContest(contest.id);
+                                            }}
                                             className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors"
                                         >
                                             <Edit2 size={18} />
                                         </button>
                                         <button
-                                            onClick={() => handleDeleteContest(contest.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteContest(contest.id);
+                                            }}
                                             className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-colors"
                                         >
                                             <Trash2 size={18} />
@@ -221,12 +245,13 @@ export default function Contests() {
                                             </div>
                                         </div>
                                         <span className="text-xs text-slate-500 font-mono">
-                                            {contest._count?.questions || 0} QUESTS
+                                            {contest._count?.questions || 0} QUESTIONS
                                         </span>
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded border ${contest.isOpenAll ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-500'}`}>
                                         {contest.isOpenAll ? 'PUBLIC' : 'RESTRICTED'}
                                     </span>
+
                                 </div>
                             </motion.div>
                         ))}
@@ -290,24 +315,33 @@ export default function Contests() {
 
                             {!isOpenAll && (
                                 <div>
-                                    <label className="block text-xs font-mono text-slate-500 mb-1 uppercase">Select Batches</label>
-                                    <select
-                                        name="batchId"
-                                        multiple
-                                        value={selectedBatchIds}
-                                        onChange={(e) => {
-                                            const ids = Array.from(e.target.selectedOptions, option => option.value);
-                                            setSelectedBatchIds(ids);
-                                        }}
-                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none transition-all min-h-[100px]"
-                                    >
-                                        {batches.map(batch => (
-                                            <option key={batch.id} value={batch.id} className="py-1 px-2 checked:bg-brand-red checked:text-white hover:bg-white/10 rounded">
-                                                {batch.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p className="text-xs text-slate-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                                    <label className="block text-xs font-mono text-slate-500 mb-3 uppercase">Select Batches (Allowed)</label>
+                                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {batches.map(batch => {
+                                            const isSelected = selectedBatchIds.includes(batch.id);
+                                            return (
+                                                <div
+                                                    key={batch.id}
+                                                    onClick={() => toggleBatch(batch.id)}
+                                                    className={`cursor-pointer group flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${isSelected
+                                                        ? 'bg-brand-red/10 border-brand-red shadow-[0_0_15px_-5px_rgba(220,38,38,0.3)]'
+                                                        : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                                        {batch.name}
+                                                    </span>
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${isSelected
+                                                        ? 'bg-brand-red border-brand-red scale-100'
+                                                        : 'border-slate-600 bg-transparent scale-90 opacity-50 group-hover:opacity-100 group-hover:border-slate-400'
+                                                        }`}>
+                                                        {isSelected && <Check size={12} className="text-white" strokeWidth={3} />}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">Click to toggle access permissions.</p>
                                 </div>
                             )}
 
@@ -371,24 +405,33 @@ export default function Contests() {
 
                             {!isOpenAll && (
                                 <div>
-                                    <label className="block text-xs font-mono text-slate-500 mb-1 uppercase">Select Batches</label>
-                                    <select
-                                        name="batchId"
-                                        multiple
-                                        value={selectedBatchIds}
-                                        onChange={(e) => {
-                                            const ids = Array.from(e.target.selectedOptions, option => option.value);
-                                            setSelectedBatchIds(ids);
-                                        }}
-                                        className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none transition-all min-h-[100px]"
-                                    >
-                                        {batches.map(batch => (
-                                            <option key={batch.id} value={batch.id} className="py-1 px-2 checked:bg-brand-red checked:text-white hover:bg-white/10 rounded">
-                                                {batch.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p className="text-xs text-slate-500 mt-1">Hold Ctrl/Cmd to select multiple</p>
+                                    <label className="block text-xs font-mono text-slate-500 mb-3 uppercase">Select Batches (Allowed)</label>
+                                    <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {batches.map(batch => {
+                                            const isSelected = selectedBatchIds.includes(batch.id);
+                                            return (
+                                                <div
+                                                    key={batch.id}
+                                                    onClick={() => toggleBatch(batch.id)}
+                                                    className={`cursor-pointer group flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${isSelected
+                                                        ? 'bg-brand-red/10 border-brand-red shadow-[0_0_15px_-5px_rgba(220,38,38,0.3)]'
+                                                        : 'bg-white/5 border-white/5 hover:border-white/20 hover:bg-white/10'
+                                                        }`}
+                                                >
+                                                    <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                                                        {batch.name}
+                                                    </span>
+                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center border transition-all ${isSelected
+                                                        ? 'bg-brand-red border-brand-red scale-100'
+                                                        : 'border-slate-600 bg-transparent scale-90 opacity-50 group-hover:opacity-100 group-hover:border-slate-400'
+                                                        }`}>
+                                                        {isSelected && <Check size={12} className="text-white" strokeWidth={3} />}
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">Click to toggle access permissions.</p>
                                 </div>
                             )}
 
@@ -399,6 +442,40 @@ export default function Contests() {
                                 <RocketIcon /> Update Protocol
                             </button>
                         </form>
+                    </Modal>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isDeleteModalOpen && (
+                    <Modal onClose={() => setIsDeleteModalOpen(false)} title="Confirm Deletion">
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+                                <div className="p-3 bg-red-500/20 rounded-full">
+                                    <Trash2 size={24} className="text-red-500" />
+                                </div>
+                                <div>
+                                    <h4 className="text-white font-bold mb-1">Delete Battle Protocol?</h4>
+                                    <p className="text-sm text-slate-400">This action causes permanent data loss and cannot be undone.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 justify-end pt-2">
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(false)}
+                                    className="px-5 py-2.5 hover:bg-white/5 rounded-xl text-slate-400 hover:text-white transition-colors font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={executeDelete}
+                                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-600/20 transition-all flex items-center gap-2"
+                                >
+                                    <Trash2 size={18} />
+                                    Delete Forever
+                                </button>
+                            </div>
+                        </div>
                     </Modal>
                 )}
             </AnimatePresence>

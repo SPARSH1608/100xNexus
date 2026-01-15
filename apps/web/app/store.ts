@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI } from './api'
+import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getContestByIdAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI, createQuestionAPI, updateQuestionAPI, deleteQuestionAPI } from './api'
 
 
 type AuthState = {
@@ -23,6 +23,7 @@ type BatchState = {
 
 type ContestState = {
     contests: any[],
+    contest: any,
     getContests: () => Promise<void>,
     createContest: (title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => Promise<any>,
     updateContest: (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => Promise<any>,
@@ -31,21 +32,33 @@ type ContestState = {
     getLiveContests: () => Promise<void>,
     getUpcomingContests: () => Promise<void>,
     getAllContests: () => Promise<void>,
+    createQuestion: (contestId: string, title: string, description: string, score: number, options: any[], timeLimit: number) => Promise<any>,
+    updateQuestion: (questionId: string, title?: string, description?: string, score?: number, options?: any[], timeLimit?: number) => Promise<any>,
+    deleteQuestion: (questionId: string) => Promise<any>
 }
-export const useAuthStore = create<AuthState>((set) => ({
-    role: null,
-    token: null,
-    isAuthenticated: false,
-    login: (token, role) => {
-        set({ token, role, isAuthenticated: true })
-    },
-    logout: () => {
-        set({ token: null, role: null, isAuthenticated: false })
-    },
-    signin: (token, role) => {
-        set({ token, role, isAuthenticated: true })
-    }
-}))
+import { persist } from 'zustand/middleware'
+
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            role: null,
+            token: null,
+            isAuthenticated: false,
+            login: (token, role) => {
+                set({ token, role, isAuthenticated: true })
+            },
+            logout: () => {
+                set({ token: null, role: null, isAuthenticated: false })
+            },
+            signin: (token, role) => {
+                set({ token, role, isAuthenticated: true })
+            }
+        }),
+        {
+            name: 'auth-storage',
+        }
+    )
+)
 export const useBatchStore = create<BatchState>((set, get) => ({
     batches: [],
     getBatches: async () => {
@@ -85,6 +98,7 @@ export const useBatchStore = create<BatchState>((set, get) => ({
 
 export const useContestStore = create<ContestState>((set, get) => ({
     contests: [],
+    contest: null,
     getContests: async () => {
         const res = await getAllContestsAPI()
         set({ contests: res.data })
@@ -114,8 +128,11 @@ export const useContestStore = create<ContestState>((set, get) => ({
         }
         return res
     },
-    getContestById: (contestId: string) => {
-        return get().contests.find((contest: any) => contest.id === contestId)
+    getContestById: async (contestId: string) => {
+        const res = await getContestByIdAPI(contestId)
+        console.log(res)
+        set({ contest: res.data })
+        return res.data
     },
     getLiveContests: async () => {
         const res = await getLiveContestsAPI()
@@ -128,5 +145,35 @@ export const useContestStore = create<ContestState>((set, get) => ({
     getAllContests: async () => {
         const res = await getAllContestsAPI()
         set({ contests: res.data })
+    },
+    createQuestion: async (contestId, title, description, score, options, timeLimit) => {
+        const res = await createQuestionAPI(contestId, title, description, score, options, timeLimit)
+        if (res.success) {
+            const contest = get().contest;
+            if (contest && contest.id === contestId) {
+                set({ contest: { ...contest, questions: [...(contest.questions || []), res.data] } })
+            }
+        }
+        return res
+    },
+    updateQuestion: async (questionId, title, description, score, options, timeLimit) => {
+        const res = await updateQuestionAPI(questionId, title, description, score, options, timeLimit)
+        if (res.success) {
+            const contest = get().contest;
+            if (contest) {
+                set({ contest: { ...contest, questions: contest.questions.map((q: any) => q.id === questionId ? res.data : q) } })
+            }
+        }
+        return res
+    },
+    deleteQuestion: async (questionId) => {
+        const res = await deleteQuestionAPI(questionId)
+        if (res.success) {
+            const contest = get().contest;
+            if (contest) {
+                set({ contest: { ...contest, questions: contest.questions.filter((q: any) => q.id !== questionId) } })
+            }
+        }
+        return res
     }
 }))

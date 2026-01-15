@@ -205,7 +205,7 @@ export const deleteContestAPI = async (contestId: string) => {
     }
     return response.data
 }
-    
+
 export const getContestByIdAPI = async (contestId: string) => {
     const token = useAuthStore.getState().token
     const response = await axios.get(
@@ -266,6 +266,67 @@ export const getUpcomingContestsAPI = async () => {
     const token = useAuthStore.getState().token
     const response = await axios.get(
         `${BASE_URL}/contest/upcoming`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+// -------------------------------------QUESTION-------------------------------------
+
+export const createQuestionAPI = async (contestId: string, title: string, description: string, score: number, options: any[], timeLimit: number) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.post(
+        `${BASE_URL}/question`,
+        {
+            contestId, title, description, score, options, timeLimit
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const updateQuestionAPI = async (questionId: string, title?: string, description?: string, score?: number, options?: any[], timeLimit?: number) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.patch(
+        `${BASE_URL}/question/${questionId}`,
+        {
+            title, description, score, options, timeLimit
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const deleteQuestionAPI = async (questionId: string) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.delete(
+        `${BASE_URL}/question/${questionId}`,
         {
             headers: {
                 "Content-Type": "application/json",
