@@ -12,8 +12,10 @@ app.use(express.json())
 
 app.use(cors())
 app.use('/auth', AuthRouter)
+import { router as UserRouter } from './routes/UserRouter.js'
 
 app.use(authMiddleware)
+app.use('/user', UserRouter)
 app.use('/batch', AdminMiddleware, BatchRouter)
 app.use('/contest', ContestRouter)
 app.use('/question', QuestionRouter)

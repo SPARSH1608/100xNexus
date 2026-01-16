@@ -361,3 +361,44 @@ export const deleteQuestionAPI = async (questionId: string) => {
     }
     return response.data
 }
+
+// -------------------------------------USER-------------------------------------
+
+export const getAllUsersAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/user`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const updateUserBatchesAPI = async (userId: string, batchIds: string[]) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.patch(
+        `${BASE_URL}/user/${userId}/batches`,
+        {
+            batchIds
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}

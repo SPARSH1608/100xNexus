@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getContestByIdAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI, createQuestionAPI, updateQuestionAPI, deleteQuestionAPI, changeContestStatusAPI } from './api'
+import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getContestByIdAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI, createQuestionAPI, updateQuestionAPI, deleteQuestionAPI, changeContestStatusAPI, getAllUsersAPI, updateUserBatchesAPI } from './api'
 
 
 type AuthState = {
@@ -183,6 +183,29 @@ export const useContestStore = create<ContestState>((set, get) => ({
             set((state) => ({
                 contests: state.contests.map((c) => c.id === contestId ? { ...c, status } : c),
                 contest: state.contest && state.contest.id === contestId ? { ...state.contest, status } : state.contest
+            }))
+        }
+        return res
+    }
+}))
+
+type UserState = {
+    users: any[],
+    getUsers: () => Promise<void>,
+    updateUserBatches: (userId: string, batchIds: string[]) => Promise<any>
+}
+
+export const useUserStore = create<UserState>((set, get) => ({
+    users: [],
+    getUsers: async () => {
+        const res = await getAllUsersAPI()
+        set({ users: res.data })
+    },
+    updateUserBatches: async (userId: string, batchIds: string[]) => {
+        const res = await updateUserBatchesAPI(userId, batchIds)
+        if (res.success) {
+            set((state) => ({
+                users: state.users.map((u) => u.id === userId ? res.data : u)
             }))
         }
         return res
