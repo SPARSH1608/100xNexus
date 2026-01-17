@@ -22,6 +22,7 @@ enum ContestStatus {
   DRAFT
   PUBLISHED
   UNPUBLISHED
+  WAITING
   LIVE
   FINISHED
 }

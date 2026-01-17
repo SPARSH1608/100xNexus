@@ -410,7 +410,7 @@ export default function AdminContests() {
                                 <input
                                     type="datetime-local"
                                     name="startTime"
-                                    defaultValue={contest.startTime ? new Date(contest.startTime).toISOString().slice(0, 16) : ''}
+                                    defaultValue={contest.startTime ? new Date(new Date(contest.startTime).getTime() - new Date(contest.startTime).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
                                     className="w-full bg-black/50 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-brand-red focus:ring-1 focus:ring-brand-red outline-none transition-all [color-scheme:dark]"
                                     required
                                 />

@@ -1,6 +1,7 @@
 import { type Response, type Request } from "express"
 import { prisma } from "@repo/db"
 import crypto from 'crypto'
+import { recalculateEndTime } from "../utils/contest.js"
 declare global {
     namespace Express {
         interface Request {
@@ -85,11 +86,20 @@ export const createContest = async (req: Request, res: Response) => {
 export const updateContest = async (req: Request, res: Response) => {
     try {
         const contestId = req.params.id;
+        if (!contestId) {
+            res.status(409).json({
+                success: false,
+                error: 'A contest with this contestId does not exist'
+            })
+            return;
+        }
         console.log("update contest payload", req.body);
 
         const existingContest = await prisma.contest.findFirst({
             where: {
                 id: contestId
+            }, include: {
+                questions: true
             }
         })
         if (!existingContest) {
@@ -101,10 +111,10 @@ export const updateContest = async (req: Request, res: Response) => {
         }
 
         const { title, isOpenAll, startTime, batchIds } = req.body;
-
+        console.log("update contest payload", req.body);
         const updateData: any = {};
         if (title !== undefined) updateData.title = title;
-        if (startTime !== undefined) updateData.startTime = startTime;
+        if (startTime !== undefined) updateData.startTime = new Date(startTime);
         if (isOpenAll !== undefined) updateData.isOpenAll = isOpenAll;
 
         if (isOpenAll === true) {
@@ -116,6 +126,11 @@ export const updateContest = async (req: Request, res: Response) => {
                 };
             }
         }
+        if (startTime !== undefined) {
+            updateData.endTime = new Date(new Date(startTime).getTime() + existingContest.questions.reduce((sum, q) => {
+                return q.timeLimit + sum
+            }, 0) * 1000)
+        }
 
         const contest = await prisma.contest.update({
             where: {
@@ -123,6 +138,10 @@ export const updateContest = async (req: Request, res: Response) => {
             },
             data: updateData
         })
+
+        if (startTime !== undefined) {
+            await recalculateEndTime(contestId)
+        }
 
         return res.status(200).json({
             success: true,
@@ -241,7 +260,7 @@ export const getLiveContests = async (req: Request, res: Response) => {
 }
 export const getUpcomingContest = async (req: Request, res: Response) => {
     try {
-        const currentTime = Date.now().toLocaleString()
+        const currentTime = new Date()
         console.log('currentTime', currentTime)
         let contest = await prisma.contest.findMany({
             where: {
@@ -282,7 +301,40 @@ export const changeContestStatus = async (req: Request, res: Response) => {
     try {
         const contestId = req.params.id;
         const { status } = req.body;
-        const contest = await prisma.contest.update({
+        if (!contestId) {
+            res.status(409).json({
+                success: false,
+                error: 'A contest with this contestId does not exist'
+            })
+            return;
+        }
+        let contest = await prisma.contest.findFirst({
+            where: {
+                id: contestId
+            }
+        })
+        if (!contest) {
+            res.status(409).json({
+                success: false,
+                error: 'A contest with this contestId does not exist'
+            })
+            return;
+        }
+        if (contest.status === status) {
+            res.status(409).json({
+                success: false,
+                error: 'Contest status is already ' + status
+            })
+            return;
+        }
+        if (status === 'LIVE' || contest.status === 'WAITING' || contest.status === 'FINISHED') {
+            res.status(409).json({
+                success: false,
+                error: 'Can not change the status of this contest'
+            })
+            return;
+        }
+        contest = await prisma.contest.update({
             where: {
                 id: contestId
             },
