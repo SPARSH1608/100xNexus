@@ -327,13 +327,13 @@ export const changeContestStatus = async (req: Request, res: Response) => {
             })
             return;
         }
-        if (status === 'LIVE' || contest.status === 'WAITING' || contest.status === 'FINISHED') {
-            res.status(409).json({
-                success: false,
-                error: 'Can not change the status of this contest'
-            })
-            return;
-        }
+        // if (status === 'LIVE' || contest.status === 'WAITING' || contest.status === 'FINISHED') {
+        //     res.status(409).json({
+        //         success: false,
+        //         error: 'Can not change the status of this contest'
+        //     })
+        //     return;
+        // }
         contest = await prisma.contest.update({
             where: {
                 id: contestId

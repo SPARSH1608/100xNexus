@@ -13,12 +13,12 @@ export default function NotFound() {
             </div>
 
             <div className="relative z-10 text-center max-w-2xl">
-                <h1 className="text-[12rem] md:text-[16rem] font-bold text-transparent bg-clip-text bg-gradient-to-b from-brand-red to-black leading-[0.8] opacity-50 select-none font-serif">
+                <h1 className="text-[12rem] md:text-[16rem] font-bold text-transparent bg-clip-text bg-gradient-to-b from-brand-red to-black leading-[0.8] opacity-50 select-none font-cursive">
                     404
                 </h1>
 
                 <div className="relative -mt-12 md:-mt-20">
-                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 font-serif">Lost in the Void?</h2>
+                    <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 font-clean">Lost in the Void?</h2>
                     <p className="text-slate-400 text-lg md:text-xl mb-10 max-w-lg mx-auto">
                         The page you are looking for has been consumed by the darkness or never existed in this timeline.
                     </p>

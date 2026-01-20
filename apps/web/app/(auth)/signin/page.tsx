@@ -38,9 +38,9 @@ export default function SigninPage() {
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-4 selection:bg-brand-red/30 overflow-hidden relative">
             <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] rounded-full bg-brand-red/10 blur-[150px] animate-pulse" />
-                <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] rounded-full bg-red-900/20 blur-[150px]" />
-                <div className="absolute top-[30%] left-[30%] w-[500px] h-[500px] border-[50px] border-brand-red/5 rounded-full blur-[80px]" />
+                <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-brand-red/10 blur-[100px]" />
+                <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-red-900/20 blur-[100px]" />
+                <div className="absolute top-[30%] left-[30%] w-[400px] h-[400px] border-[50px] border-brand-red/5 rounded-full blur-[60px]" />
             </div>
 
             <ToastContainer position="top-right" theme="dark" />
@@ -57,8 +57,8 @@ export default function SigninPage() {
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-red/10 text-brand-red mb-6 border border-brand-red/20 shadow-[0_0_20px_-5px_rgba(220,38,38,0.3)]">
                             <Zap size={24} className="fill-current" />
                         </div>
-                        <h1 className="text-3xl font-serif text-white mb-2">Welcome Back</h1>
-                        <p className="text-slate-500">Enter your credentials to access the arena</p>
+                        <h1 className="text-3xl font-clean font-bold text-white mb-2">Welcome Back</h1>
+                        <p className="text-slate-500 font-clean text-lg">Enter your credentials to access the arena</p>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-6">

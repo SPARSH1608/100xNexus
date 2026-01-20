@@ -11,7 +11,10 @@
     "check-types": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@repo/ui": "*",
+    "@types/three": "^0.182.0",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.26.2",
@@ -21,6 +24,7 @@
     "react-dom": "^19.2.0",
     "react-toastify": "^11.0.5",
     "tailwind-merge": "^3.4.0",
+    "three": "^0.182.0",
     "toast": "^0.5.4",
     "zustand": "^5.0.10"
   },

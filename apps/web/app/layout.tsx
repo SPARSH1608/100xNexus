@@ -16,8 +16,18 @@ const geistMono = localFont({
   variable: "--font-geist-mono",
 });
 
-import { Playfair_Display } from 'next/font/google';
+import { Playfair_Display, Cormorant_Garamond, Great_Vibes } from 'next/font/google';
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
+const cormorant = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-cormorant',
+  weight: ['300', '400', '500', '600', '700']
+});
+const greatVibes = Great_Vibes({
+  subsets: ['latin'],
+  variable: '--font-great-vibes',
+  weight: ['400']
+});
 
 
 export default function RootLayout({
@@ -29,7 +39,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} ${cormorant.variable} ${greatVibes.variable} font-sans`}>
         {children}
         <ToastContainer />
       </body>

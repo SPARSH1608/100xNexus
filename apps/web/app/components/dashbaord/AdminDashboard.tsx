@@ -9,8 +9,8 @@ export default function AdminDashboard() {
             <Navbar />
 
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] rounded-full bg-brand-red/10 blur-[150px] animate-pulse" />
-                <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] rounded-full bg-red-900/10 blur-[150px]" />
+                <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-brand-red/10 blur-[100px]" />
+                <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-red-900/10 blur-[100px]" />
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
                         <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-brand-red/30 bg-brand-red/10 text-brand-red text-xs font-mono uppercase tracking-widest">
                             <ShieldAlert size={14} /> Admin access granted
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight">
+                        <h1 className="text-4xl md:text-5xl font-clean font-bold text-white tracking-tight">
                             Command Center
                         </h1>
                         <p className="text-slate-400 mt-2 text-lg">Manage contests, batches, and monitor system diagnostics.</p>

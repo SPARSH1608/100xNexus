@@ -34,7 +34,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
+        sans: ["Helvetica", "Arial", "sans-serif"],
+        clean: ["var(--font-cormorant)", "serif"],
+        cursive: ["var(--font-great-vibes)", "cursive"],
+        blacksword: ["var(--font-great-vibes)", "cursive"],
         mono: ["var(--font-geist-mono)"],
         serif: ['var(--font-playfair)', 'serif'],
       },

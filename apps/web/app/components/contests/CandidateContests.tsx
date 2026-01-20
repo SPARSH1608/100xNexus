@@ -115,10 +115,13 @@ export default function CandidateContests() {
                                         </div>
 
                                         <button
-                                            onClick={() => router.push(`/contest/${contest.id}`)}
+                                            onClick={() =>{(
+                                                contest.status === 'LIVE' ? router.push(`/contest/${contest.id}`) : contest.status === 'FINISHED' ? router.push(`/contest/${contest.id}/leaderboard`) : contest.status === 'WAITING' ? router.push(`/contest/${contest.id}/waiting-room`) : router.push(`/contest/${contest.id}`)
+                                            )}}
                                             className="w-full py-3 bg-white/5 hover:bg-white text-slate-300 hover:text-black font-bold rounded-xl border border-white/5 transition-all flex items-center justify-center gap-2 group/btn"
                                         >
-                                            <Play size={16} className="fill-current" /> Enter Arena
+                                            <Play size={16} className="fill-current" />
+                                            {contest.status === 'LIVE' ? 'Enter Contest' : contest.status === 'FINISHED' ? 'View leaderboard' : contest.status === 'WAITING' ? 'Join Waiting Room' : 'View Contest Details'}
                                         </button>
                                     </motion.div>
                                 ))}

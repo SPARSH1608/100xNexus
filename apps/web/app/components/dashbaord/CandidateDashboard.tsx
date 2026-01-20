@@ -26,7 +26,7 @@ export default function CandidateDashboard() {
             <Navbar />
 
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[10%] left-[20%] w-[600px] h-[600px] rounded-full bg-brand-red/5 blur-[120px] animate-pulse" />
+                <div className="absolute top-[10%] left-[20%] w-[400px] h-[400px] rounded-full bg-brand-red/5 blur-[80px]" />
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
@@ -38,8 +38,8 @@ export default function CandidateDashboard() {
                     >
                         <span className="w-2 h-2 rounded-full bg-green-500" /> System Online
                     </motion.div>
-                    <h1 className="text-4xl md:text-5xl font-serif text-white tracking-tight mb-2">
-                        Welcome Back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-600">Warrior</span>
+                    <h1 className="text-4xl md:text-5xl font-clean font-bold text-white tracking-tight mb-2">
+                        Welcome Back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-600 font-cursive text-6xl">Warrior</span>
                     </h1>
                     <p className="text-slate-400 text-lg max-w-2xl">The arena awaits. Ready to challenge yourself today?</p>
                 </div>

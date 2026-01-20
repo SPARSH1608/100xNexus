@@ -53,7 +53,7 @@ export default function Navbar() {
                                     <Code2 size={18} strokeWidth={2.5} />
                                 </div>
                                 <div className="hidden sm:block">
-                                    <span className="text-lg font-bold text-white tracking-tight">100x<span className="text-brand-red">Contest</span></span>
+                                    <span className="text-lg font-bold text-white tracking-tight">100x<span className="text-brand-red font-cursive text-2xl ml-1">Contest</span></span>
                                 </div>
                             </Link>
 
@@ -156,72 +156,74 @@ export default function Navbar() {
                             </div>
                         </div>
                     </div>
-                </div>
-            </motion.nav>
+                </div >
+            </motion.nav >
 
             {/* Mobile Menu Overlay */}
             <AnimatePresence>
-                {mobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
-                        exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        className="fixed inset-0 z-40 bg-black/60 md:hidden pt-28 px-4"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
+                {
+                    mobileMenuOpen && (
                         <motion.div
-                            initial={{ y: -20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: -20, opacity: 0 }}
-                            className="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
-                            onClick={e => e.stopPropagation()}
+                            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                            animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
+                            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+                            className="fixed inset-0 z-40 bg-black/60 md:hidden pt-28 px-4"
+                            onClick={() => setMobileMenuOpen(false)}
                         >
-                            <div className="p-2 space-y-1">
-                                {isAuthenticated && items ? (
-                                    <>
-                                        {items.map((item) => {
-                                            const isActive = pathname === item.href
-                                            return (
-                                                <Link
-                                                    key={item.href}
-                                                    href={item.href}
-                                                    onClick={() => setMobileMenuOpen(false)}
-                                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                                                        ? "bg-white/10 text-white"
-                                                        : "text-slate-400 hover:text-white hover:bg-white/5"
-                                                        }`}
-                                                >
-                                                    <span className="font-medium">{item.label}</span>
-                                                </Link>
-                                            )
-                                        })}
-                                        <div className="h-px bg-white/5 my-2" />
-                                        <button
-                                            onClick={handleLogout}
-                                            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium"
-                                        >
-                                            <LogOut size={18} /> Sign Out
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div className="p-4 space-y-3">
-                                        <Link href="/signin" onClick={() => setMobileMenuOpen(false)} className="block">
-                                            <button className="w-full py-3 text-slate-300 font-medium border border-white/10 rounded-xl hover:bg-white/5">
-                                                Sign In
+                            <motion.div
+                                initial={{ y: -20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -20, opacity: 0 }}
+                                className="bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+                                onClick={e => e.stopPropagation()}
+                            >
+                                <div className="p-2 space-y-1">
+                                    {isAuthenticated && items ? (
+                                        <>
+                                            {items.map((item) => {
+                                                const isActive = pathname === item.href
+                                                return (
+                                                    <Link
+                                                        key={item.href}
+                                                        href={item.href}
+                                                        onClick={() => setMobileMenuOpen(false)}
+                                                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
+                                                            ? "bg-white/10 text-white"
+                                                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                                                            }`}
+                                                    >
+                                                        <span className="font-medium">{item.label}</span>
+                                                    </Link>
+                                                )
+                                            })}
+                                            <div className="h-px bg-white/5 my-2" />
+                                            <button
+                                                onClick={handleLogout}
+                                                className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-medium"
+                                            >
+                                                <LogOut size={18} /> Sign Out
                                             </button>
-                                        </Link>
-                                        <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block">
-                                            <button className="w-full py-3 bg-brand-red text-white font-bold rounded-xl shadow-lg shadow-brand-red/20">
-                                                Sign Up
-                                            </button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-4 space-y-3">
+                                            <Link href="/signin" onClick={() => setMobileMenuOpen(false)} className="block">
+                                                <button className="w-full py-3 text-slate-300 font-medium border border-white/10 rounded-xl hover:bg-white/5">
+                                                    Sign In
+                                                </button>
+                                            </Link>
+                                            <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="block">
+                                                <button className="w-full py-3 bg-brand-red text-white font-bold rounded-xl shadow-lg shadow-brand-red/20">
+                                                    Sign Up
+                                                </button>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    )
+                }
+            </AnimatePresence >
         </>
     )
 }
