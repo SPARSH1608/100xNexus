@@ -13,6 +13,19 @@ type SuccessResponse = {
 type Response = SuccessResponse | ErrorResponse
 const BASE_URL = 'http://localhost:3001'
 
+axios.interceptors.response.use(
+    (response) => {
+        return response
+    },
+    (error) => {
+        if (error.response && error.response.status === 403) {
+            useAuthStore.getState().logout()
+            window.location.href = '/'
+        }
+        return Promise.reject(error)
+    }
+)
+
 // -------------------------------------AUTH-------------------------------------
 export const SignupAPI = async (name: string, email: string, password: string) => {
     console.log('name', name)
@@ -246,6 +259,25 @@ export const changeContestStatusAPI = async (contestId: string, status: string) 
     return response.data
 }
 
+export const joinContestAPI = async (contestId: string) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.post(
+        `${BASE_URL}/contest/${contestId}/join`,
+        {},
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
 export const getContestByIdAPI = async (contestId: string) => {
     const token = useAuthStore.getState().token
     const response = await axios.get(
@@ -408,6 +440,45 @@ export const updateUserBatchesAPI = async (userId: string, batchIds: string[]) =
         {
             batchIds
         },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const submitAnswerAPI = async (contestId: string, questionId: string, optionIds: string[]) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.post(
+        `${BASE_URL}/contest/${contestId}/submit`,
+        {
+            questionId, optionIds
+        },
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const getLeaderboardAPI = async (contestId: string) => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/${contestId}/leaderboard`,
         {
             headers: {
                 "Content-Type": "application/json",

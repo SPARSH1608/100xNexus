@@ -2,6 +2,9 @@ import { type Response, type Request } from "express"
 import { prisma } from "@repo/db"
 import crypto from 'crypto'
 import { recalculateEndTime } from "../utils/contest.js"
+import { ContestManager } from "../managers/ContestManager.js"
+
+const contestManager = new ContestManager();
 declare global {
     namespace Express {
         interface Request {
@@ -70,6 +73,7 @@ export const createContest = async (req: Request, res: Response) => {
 
             }
         })
+        await contestManager.cleanLeaderboard(contest.id);
         res.status(200).json({
             success: true,
             data: contest,
@@ -191,6 +195,11 @@ export const getContest = async (req: Request, res: Response) => {
                 questions: {
                     include: {
                         options: true
+                    }
+                },
+                _count: {
+                    select: {
+                        participants: true
                     }
                 }
             }
@@ -372,32 +381,32 @@ export const getMyContests = async (req: Request, res: Response) => {
         }
 
         const userBatchIds = user.batches.map(b => b.id)
-
-        const contests = await prisma.contest.findMany({
-            where: {
-                OR: [
-                    { isOpenAll: true },
-                    {
-                        batches: {
-                            some: {
-                                id: { in: userBatchIds }
-                            }
-                        }
-                    }
-                ],
-                status: {
-                    in: ['PUBLISHED', 'LIVE', 'FINISHED']
-                }
-            },
-            include: {
-                _count: {
-                    select: { questions: true }
-                }
-            },
-            orderBy: {
-                startTime: 'asc'
-            }
-        })
+        const contests = await prisma.contest.findMany({})
+        // const contests = await prisma.contest.findMany({
+        //     where: {
+        //         OR: [
+        //             { isOpenAll: true },
+        //             {
+        //                 batches: {
+        //                     some: {
+        //                         id: { in: userBatchIds }
+        //                     }
+        //                 }
+        //             }
+        //         ],
+        //         status: {
+        //             in: ['PUBLISHED', 'LIVE', 'FINISHED']
+        //         }
+        //     },
+        //     include: {
+        //         _count: {
+        //             select: { questions: true }
+        //         }
+        //     },
+        //     orderBy: {
+        //         startTime: 'asc'
+        //     }
+        // })
 
         res.status(200).json({
             success: true,
@@ -437,10 +446,10 @@ export const joinContest = async (req: Request, res: Response) => {
                 error: 'Contest not found'
             })
         }
-        if (contest.status !== 'LIVE') {
+        if (contest.status === 'LIVE' || contest.status === 'FINISHED') {
             return res.status(400).json({
                 success: false,
-                error: 'Contest is not live'
+                error: 'Cannot join a live or finished contest'
             })
         }
         const user = await prisma.user.findUnique({
@@ -474,19 +483,107 @@ export const joinContest = async (req: Request, res: Response) => {
             })
         }
 
-        const participation = await prisma.quizParticipant.create({
-            data: {
-                userId: user.id,
-                contestId: contestId
-            }
-        })
+        await contestManager.joinContest(contestId, userId)
+
         res.status(200).json({
             success: true,
-            data: participation,
+            data: { contestId, userId },
             message: 'Contest joined successfully'
         })
     } catch (error) {
         console.log('error while joining contest', error)
+        res.status(500).json({
+            success: false,
+            error: error
+        })
+    }
+}
+
+export const streamContest = async (req: Request, res: Response) => {
+    try {
+        const contestId = req.params.id;
+        if (!contestId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Contest ID is required'
+            })
+        }
+        await contestManager.streamQuestions(contestId, res)
+    } catch (error) {
+        console.log('error while streaming contest', error)
+        res.status(500).json({
+            success: false,
+            error: error
+        })
+    }
+}
+
+export const submitAnswer = async (req: Request, res: Response) => {
+    try {
+        const contestId = req.params.id;
+        if (!contestId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Contest ID is required'
+            })
+        }
+        const { questionId, optionIds } = req.body;
+        const userId = req.userId;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: 'User ID is required'
+            })
+        }
+        await contestManager.submitAnswer(contestId, userId, questionId, optionIds)
+        res.status(200).json({
+            success: true,
+            message: 'Answer submitted successfully'
+        })
+    } catch (error) {
+        console.log('error while submitting answer', error)
+        res.status(500).json({
+            success: false,
+            error: error
+        })
+    }
+}
+export const getLeaderboard = async (req: Request, res: Response) => {
+    try {
+        const contestId = req.params.id;
+        if (!contestId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Contest ID is required'
+            })
+        }
+        const leaderboard = await prisma.quizResult.findMany({
+            where: {
+                contestId
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                rank: 'asc'
+            }
+        })
+        res.status(200).json({
+            success: true,
+            data: leaderboard.map(entry => ({
+                userId: entry.userId,
+                name: entry.user.name,
+                score: entry.finalScore,
+                rank: entry.rank
+            })),
+            message: 'Leaderboard fetched successfully'
+        })
+    } catch (error) {
+        console.log('error while fetching leaderboard', error)
         res.status(500).json({
             success: false,
             error: error

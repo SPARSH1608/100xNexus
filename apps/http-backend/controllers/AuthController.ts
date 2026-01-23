@@ -18,7 +18,7 @@ export const signupUser = async (req: Request, res: Response) => {
             })
             return
         }
-        role = role ? role : "candidate"
+        role = role ? role : "CANDIDATE"
         const hashedPassword = bcrypt.hashSync(password, Number(process.env.SALT!));
         const user = await prisma.user.create({
             data: {
@@ -63,6 +63,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 success: false,
                 error: 'User with this email does not exist'
             })
+            return
         }
         const isValid = bcrypt.compareSync(password, user!.password)
         if (!isValid) {
@@ -70,6 +71,7 @@ export const loginUser = async (req: Request, res: Response) => {
                 success: false,
                 error: 'Wrong credentials'
             })
+            return
         }
         const token = jwt.sign({ userId: user!.id }, process.env.SECRET!, { expiresIn: '1d' })
         res.status(200).json({

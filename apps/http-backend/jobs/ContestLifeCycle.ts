@@ -1,5 +1,8 @@
 import cron from "node-cron"
 import { prisma } from "@repo/db"
+import { ContestManager } from "../managers/ContestManager.js"
+
+const contestManager = new ContestManager()
 
 export const startContestLifeCycle = async () => {
     console.log("Contest Life Cycle Started")
@@ -9,7 +12,8 @@ export const startContestLifeCycle = async () => {
         }
     })
     console.log("Contest Live Count", contestLiveCount)
-    cron.schedule("*/30 * * * * *", async () => {
+    // Run every 10 seconds to avoid overloading the DB
+    cron.schedule("*/10 * * * * *", async () => {
         const now = new Date()
 
         await prisma.contest.updateMany({
@@ -40,18 +44,19 @@ export const startContestLifeCycle = async () => {
             }
         })
 
-        await prisma.contest.updateMany({
+        const endedContests = await prisma.contest.findMany({
             where: {
-                status: "LIVE",
+                status: 'LIVE',
                 endTime: {
-                    lte: now
+                    lt: now
                 }
-            },
-            data: {
-                status: "FINISHED"
             }
         })
 
-        console.log("Contest Life Cycle Updated")
+        for (const contest of endedContests) {
+            await contestManager.finishContest(contest.id)
+        }
     })
+
+    console.log("Contest Life Cycle Updated")
 }

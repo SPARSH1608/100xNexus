@@ -1,5 +1,5 @@
 import express, { Router } from 'express'
-import { changeContestStatus, createContest, deleteContest, getAllContest, getContest, getLiveContests, getUpcomingContest, updateContest, getMyContests, joinContest } from '../controllers/ContestController.js'
+import { changeContestStatus, createContest, deleteContest, getAllContest, getContest, getLiveContests, getUpcomingContest, updateContest, getMyContests, joinContest, streamContest, submitAnswer, getLeaderboard } from '../controllers/ContestController.js'
 export const router: Router = express.Router()
 
 
@@ -13,3 +13,6 @@ router.delete('/:id', deleteContest)
 router.get('/:id', getContest)
 router.post('/:id/status', changeContestStatus)
 router.post('/:id/join', joinContest)
+router.get('/:id/stream', streamContest)
+router.post('/:id/submit', submitAnswer)
+router.get('/:id/leaderboard', getLeaderboard)

@@ -25,8 +25,12 @@ export default function SigninPage() {
                 toast.success(response.message);
                 router.push('/dashboard');
             }
-        } catch (error) {
-            toast.error(error as string);
+        } catch (error: any) {
+            if (error.response && error.response.data && error.response.data.error) {
+                toast.error(error.response.data.error);
+            } else {
+                toast.error("Something went wrong");
+            }
         }
     };
 

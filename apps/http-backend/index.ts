@@ -10,7 +10,11 @@ import { startContestLifeCycle } from "./jobs/ContestLifeCycle.js"
 import cors from 'cors'
 app.use(express.json())
 
-app.use(cors())
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']
+}))
 app.use('/auth', AuthRouter)
 import { router as UserRouter } from './routes/UserRouter.js'
 
