@@ -4,6 +4,7 @@ export const NAV_ITEMS = {
         { label: "Contests", href: "/contests" },
         { label: "Batches", href: "/batches" },
         { label: "Students", href: "/users" },
+        { label: "Questions", href: "/questions" },
     ],
     CANDIDATE: [
         { label: "Dashboard", href: "/dashboard" },

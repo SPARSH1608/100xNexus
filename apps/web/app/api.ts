@@ -18,7 +18,7 @@ axios.interceptors.response.use(
         return response
     },
     (error) => {
-        if (error.response && error.response.status === 403) {
+        if (error.response && error.response.status === 403 && error.response.data.error === 'Not authorized') {
             useAuthStore.getState().logout()
             window.location.href = '/'
         }
@@ -399,6 +399,24 @@ export const deleteQuestionAPI = async (questionId: string) => {
     const token = useAuthStore.getState().token
     const response = await axios.delete(
         `${BASE_URL}/question/${questionId}`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}
+
+export const getAllQuestionsAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/question`,
         {
             headers: {
                 "Content-Type": "application/json",

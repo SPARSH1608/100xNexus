@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getContestByIdAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI, createQuestionAPI, updateQuestionAPI, deleteQuestionAPI, changeContestStatusAPI, getAllUsersAPI, updateUserBatchesAPI, getMyContestsAPI } from './api'
+import { createBatchAPI, createContestAPI, deleteBatchAPI, deleteContestAPI, getAllContestsAPI, getBatchesAPI, getContestByIdAPI, getLiveContestsAPI, getUpcomingContestsAPI, updateBatchAPI, updateContestAPI, createQuestionAPI, updateQuestionAPI, deleteQuestionAPI, changeContestStatusAPI, getAllUsersAPI, updateUserBatchesAPI, getMyContestsAPI, getAllQuestionsAPI } from './api'
 
 
 type AuthState = {
@@ -38,6 +38,8 @@ type ContestState = {
     changeContestStatus: (contestId: string, status: string) => Promise<any>
     myContests: any[]
     getMyContests: () => Promise<void>
+    allQuestions: any[]
+    getAllQuestions: () => Promise<void>
 }
 import { persist } from 'zustand/middleware'
 
@@ -195,6 +197,13 @@ export const useContestStore = create<ContestState>((set, get) => ({
             }))
         }
         return res
+    },
+    allQuestions: [],
+    getAllQuestions: async () => {
+        const res = await getAllQuestionsAPI()
+        if (res.success) {
+            set({ allQuestions: res.data })
+        }
     }
 }))
 
