@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useBatchStore, useUserStore } from "../../store"
-import Navbar from "../../components/layout/navbar"
+import Sidebar from "../../components/layout/sidebar"
 import { toast, ToastContainer } from "react-toastify"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, Users, Edit2, Check, X, Shield, BookOpen } from "lucide-react"
@@ -77,9 +77,9 @@ export default function UsersPage() {
                 <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-brand-red/5 blur-[120px]" />
             </div>
 
-            <Navbar />
+            <Sidebar />
 
-            <main className="container mx-auto px-4 pt-28 pb-12 relative z-10">
+            <main className="container mx-auto px-4 pt-28 md:pt-12 md:pl-24 pb-12 relative z-10">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-10">
                     <div>
                         <div className="inline-flex items-center gap-2 px-3 py-1 mb-2 rounded-full border border-white/10 bg-white/5 text-slate-400 text-xs font-mono uppercase tracking-widest">

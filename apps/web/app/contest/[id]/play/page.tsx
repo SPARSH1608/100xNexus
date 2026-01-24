@@ -1,6 +1,6 @@
 'use client'
 import { useParams, useRouter } from "next/navigation"
-import Navbar from "../../../components/layout/navbar"
+import Sidebar from "../../../components/layout/sidebar"
 import { Code2, Trophy, Clock, CheckCircle2 } from "lucide-react"
 import { useEffect, useState, useRef } from "react"
 import { submitAnswerAPI } from "../../../api"
@@ -115,7 +115,7 @@ export default function ContestPlayPage() {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center">
-                <Navbar />
+                <Sidebar />
                 <div className="flex flex-col items-center">
                     <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mb-6"></div>
                     <h2 className="text-xl font-clean font-medium text-slate-400">Connecting to Arena...</h2>
@@ -127,7 +127,7 @@ export default function ContestPlayPage() {
     if (!question) {
         return (
             <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center">
-                <Navbar />
+                <Sidebar />
                 <div className="animate-pulse flex flex-col items-center">
                     <div className="w-16 h-16 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 mb-6 border border-orange-500/20">
                         <Code2 size={32} />
@@ -140,6 +140,7 @@ export default function ContestPlayPage() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-brand-red/30 flex flex-col">
+            <Sidebar />
             {/* Minimal Header for Play Mode */}
             <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex justify-between items-center">
                 <div className="font-bold text-xl tracking-wider">ARENA <span className="text-brand-red">LIVE</span></div>
@@ -154,7 +155,7 @@ export default function ContestPlayPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 pt-32 pb-12 flex-1 flex flex-col max-w-4xl relative">
+            <div className="container mx-auto px-4 pt-32 md:pt-24 md:pl-24 pb-12 flex-1 flex flex-col max-w-4xl relative">
                 {/* Main Question Area - Centered and distraction free */}
                 <div className="w-full">
                     <div className="mb-8">

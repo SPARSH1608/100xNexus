@@ -1,7 +1,7 @@
 'use client';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Navbar from '../../../components/layout/navbar';
+import Sidebar from '../../../components/layout/sidebar';
 import { Trophy, Medal, Star } from 'lucide-react';
 import { getLeaderboardAPI } from '../../../api'; // Assuming this API function needs to be created or I'll just fetch directly for now if not exists
 
@@ -40,9 +40,9 @@ export default function LeaderboardPage() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-brand-red/30">
-            <Navbar />
+            <Sidebar />
 
-            <div className="container mx-auto px-4 pt-32 pb-12 max-w-4xl">
+            <div className="container mx-auto px-4 pt-32 md:pt-12 md:pl-24 pb-12 max-w-4xl">
                 <div className="text-center mb-12 animate-fade-in-up">
                     <div className="inline-flex items-center justify-center p-4 rounded-full bg-brand-red/10 text-brand-red mb-6 border border-brand-red/20 shadow-[0_0_30px_-5px_var(--brand-red)]">
                         <Trophy size={48} />

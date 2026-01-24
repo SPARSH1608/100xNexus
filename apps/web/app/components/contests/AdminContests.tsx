@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useBatchStore, useContestStore } from "../../store"
 import { createContestAPI } from "../../api"
 import { toast, ToastContainer } from "react-toastify"
-import Navbar from "../layout/navbar"
+import Sidebar from "../layout/sidebar"
 import { Plus, Trash2, Edit2, Calendar, Clock, XCircle, Search, Trophy, Shield, Zap, Target, Check, Loader } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -155,9 +155,9 @@ export default function AdminContests() {
                 <div className="absolute bottom-[20%] left-[20%] w-[500px] h-[500px] rounded-full bg-red-900/10 blur-[150px]" />
             </div>
 
-            <Navbar />
+            <Sidebar />
 
-            <main className="container mx-auto px-4 pt-24 pb-12 relative z-10">
+            <main className="container mx-auto px-4 pt-24 md:pt-12 md:pl-24 pb-12 relative z-10">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-40">
                         <Loader className="animate-spin text-brand-red mb-4" size={48} />

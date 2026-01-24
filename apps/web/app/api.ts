@@ -510,3 +510,22 @@ export const getLeaderboardAPI = async (contestId: string) => {
     }
     return response.data
 }
+
+
+export const getQuizSubmissionsAPI = async () => {
+    const token = useAuthStore.getState().token
+    const response = await axios.get(
+        `${BASE_URL}/contest/submissions/all`,
+        {
+            headers: {
+                "Content-Type": "application/json",
+                "authorization": `Bearer ${token}`
+            },
+        }
+    )
+
+    if (!response.data.success) {
+        throw new Error(response.data.error)
+    }
+    return response.data
+}

@@ -34,7 +34,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Helvetica", "Arial", "sans-serif"],
+        sans: ["-apple-system", "BlinkMacSystemFont", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
         clean: ["var(--font-cormorant)", "serif"],
         cursive: ["var(--font-great-vibes)", "cursive"],
         blacksword: ["var(--font-great-vibes)", "cursive"],

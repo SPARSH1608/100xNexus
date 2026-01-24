@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useBatchStore, useContestStore } from "../../../store"
 import { useParams, useRouter } from "next/navigation"
-import Navbar from "../../../components/layout/navbar"
+import Sidebar from "../../../components/layout/sidebar"
 import { motion, AnimatePresence } from "framer-motion"
 import { Trophy, Calendar, Clock, Users, Plus, Edit2, Trash2, CheckCircle2, XCircle, Search, Target, HelpCircle, Save, ArrowLeft } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
@@ -133,9 +133,9 @@ export default function ContestDetails() {
                 <div className="absolute top-[10%] right-[10%] w-[500px] h-[500px] rounded-full bg-brand-red/5 blur-[120px]" />
             </div>
 
-            <Navbar />
+            <Sidebar />
 
-            <main className="container mx-auto px-4 pt-28 pb-12 relative z-10">
+            <main className="container mx-auto px-4 pt-28 md:pt-12 md:pl-24 pb-12 relative z-10">
                 <div className="mb-10">
                     <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white mb-4 transition-colors">
                         <ArrowLeft size={16} /> Back to Battles

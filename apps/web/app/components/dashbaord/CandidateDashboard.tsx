@@ -1,4 +1,4 @@
-import Navbar from "../layout/navbar";
+import Sidebar from "../layout/sidebar";
 import { motion } from "framer-motion"
 import Link from "next/link";
 import { Play, Clock, BarChart3, ChevronRight, Trophy, Calendar, Zap, Target } from "lucide-react";
@@ -23,13 +23,13 @@ export default function CandidateDashboard() {
 
     return (
         <div className="min-h-screen bg-black text-slate-100 selection:bg-brand-red/30 relative overflow-hidden">
-            <Navbar />
+            <Sidebar />
 
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
                 <div className="absolute top-[10%] left-[20%] w-[400px] h-[400px] rounded-full bg-brand-red/5 blur-[80px]" />
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-12 md:pl-24 pb-12 relative z-10">
                 <div className="mb-12">
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}

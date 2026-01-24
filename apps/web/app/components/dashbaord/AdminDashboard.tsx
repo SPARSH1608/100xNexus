@@ -1,145 +1,250 @@
-import Navbar from "../layout/navbar"
+import Sidebar from "../layout/sidebar"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Plus, Users, Trophy, Activity, ArrowUpRight, Search, Filter, MoreHorizontal, ShieldAlert, Zap } from "lucide-react"
+import { Plus, Users, Trophy, Activity, ArrowUpRight, Search, Filter, MoreHorizontal, ShieldAlert, Zap, Clock, ChevronDown, Bell, MessageSquare, Heart } from "lucide-react"
+import { useContestStore, useUserStore } from "../../store"
+import { useEffect } from "react"
+import { format } from "date-fns";
 
 export default function AdminDashboard() {
+    const { contests, getContests, submissions, getQuizSubmissions } = useContestStore((state) => state)
+    const { users, getUsers } = useUserStore((state) => state)
+
+    useEffect(() => {
+        getContests()
+        getUsers()
+        getQuizSubmissions()
+    }, [])
+
+    const activeContestsCount = contests.filter(c => c.status === "Active" || new Date(c.startTime) <= new Date() && new Date(c.endTime) > new Date()).length
+    const totalStudents = users.length
+
+    // Sort users by ID assuming newer users have higher IDs
+    const newStudents = [...users].slice(-5).reverse();
+
+    // Filter active/live contests for the list
+    const liveBattles = contests.filter(c => c.status === "Active" || c.isOpenAll).slice(0, 4);
+
     return (
-        <div className="min-h-screen bg-black text-slate-100 selection:bg-brand-red/30 relative overflow-hidden">
-            <Navbar />
+        <div className="min-h-screen bg-[#050505] text-slate-100 selection:bg-brand-red/30 relative overflow-hidden font-sans">
+            <Sidebar />
 
-            <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-                <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-brand-red/10 blur-[100px]" />
-                <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] rounded-full bg-red-900/10 blur-[100px]" />
-            </div>
+            <main className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-12 md:pl-24 pb-12 relative z-10 text-white">
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
-                <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full border border-brand-red/30 bg-brand-red/10 text-brand-red text-xs font-mono uppercase tracking-widest">
-                            <ShieldAlert size={14} /> Admin access granted
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+
+                    <div className="flex items-center gap-4 w-full md:w-auto">
+                        <div className="relative flex-1 md:w-96 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-white transition-colors" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search anything..."
+                                className="w-full bg-[#111] hover:bg-[#161616] focus:bg-[#161616] border-none rounded-full py-3.5 pl-12 pr-6 text-sm text-slate-300 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all placeholder:text-slate-600 font-medium"
+                            />
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-clean font-bold text-white tracking-tight">
-                            Command Center
-                        </h1>
-                        <p className="text-slate-400 mt-2 text-lg">Manage contests, batches, and monitor system diagnostics.</p>
-                    </div>
-                    <Link href="/admin/create-contest">
-                        <button className="group flex items-center gap-3 px-6 py-3 bg-brand-red hover:bg-red-700 text-white rounded-xl transition-all shadow-lg shadow-brand-red/20 hover:shadow-brand-red/40">
-                            <Plus size={20} className="group-hover:rotate-90 transition-transform" />
-                            <span className="font-bold tracking-wide">Create Contest</span>
+
+                        <Link href="/admin/create-contest">
+                            <button className="bg-[#111] hover:bg-[#222] text-white px-6 py-3.5 rounded-full font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap">
+                                <Plus size={16} /> Create
+                            </button>
+                        </Link>
+
+                        <button className="w-12 h-12 bg-[#111] hover:bg-[#222] rounded-full flex items-center justify-center transition-colors text-slate-400 hover:text-white relative">
+                            <Bell size={20} />
+                            <span className="absolute top-3 right-3.5 w-2 h-2 bg-brand-red rounded-full border-2 border-[#111]" />
                         </button>
-                    </Link>
+
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10">
+                            <img
+                                src={`https://api.dicebear.com/9.x/avataaars/svg?seed=Admin`}
+                                alt="Admin"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    {[
-                        { label: "Total Students", value: "1,234", change: "+12%", icon: Users, color: "text-brand-red", bg: "bg-brand-red/10" },
-                        { label: "Active Contests", value: "8", change: "+2", icon: Trophy, color: "text-yellow-400", bg: "bg-yellow-400/10" },
-                        { label: "Avg. Score", value: "76%", change: "+5.4%", icon: Activity, color: "text-green-400", bg: "bg-green-400/10" },
-                        { label: "Participation", value: "92%", change: "+1.2%", icon: Zap, color: "text-orange-400", bg: "bg-orange-400/10" },
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1 }}
-                            className="bg-[#0A0A0A] border border-white/5 p-6 rounded-2xl hover:border-brand-red/30 transition-all hover:-translate-y-1 group"
-                        >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className={`p-3 rounded-xl ${stat.bg} ${stat.color} border border-white/5 group-hover:border-white/10 transition-colors`}>
-                                    <stat.icon size={20} />
-                                </div>
-                                <span className="text-xs font-bold text-slate-300 bg-white/5 px-2 py-1 rounded-full border border-white/5">
-                                    {stat.change}
-                                </span>
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+
+                    {/* Left Column (Main Content) */}
+                    <div className="xl:col-span-8 flex flex-col gap-8">
+
+                        {/* Overview Card */}
+                        <div className="bg-[#111] rounded-[2.5rem] p-8 relative overflow-hidden group">
+                            {/* Decorative Blur */}
+                            <div className="absolute -right-20 -top-20 w-80 h-80 bg-brand-red/5 rounded-full blur-[100px] group-hover:bg-brand-red/10 transition-all duration-700" />
+
+                            <div className="flex items-center justify-between mb-8 relative z-10">
+                                <h2 className="text-xl font-bold">Overview</h2>
+                                <button className="flex items-center gap-2 text-sm font-medium text-slate-400 bg-white/5 px-4 py-2 rounded-full hover:bg-white/10 transition-colors">
+                                    Last month <ChevronDown size={14} />
+                                </button>
                             </div>
-                            <h3 className="text-3xl font-bold text-white mb-1 group-hover:text-brand-red transition-colors">{stat.value}</h3>
-                            <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                        </motion.div>
-                    ))}
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-[#050505] border border-white/5 rounded-3xl p-6 overflow-hidden">
-                            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 gap-4">
-                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                    <Activity size={20} className="text-brand-red" /> Live Operations
-                                </h2>
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                    <div className="relative flex-1 sm:w-64">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                                        <input
-                                            type="text"
-                                            placeholder="Search contests..."
-                                            className="w-full bg-[#111] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-slate-300 focus:outline-none focus:border-brand-red/50 focus:ring-1 focus:ring-brand-red/50 placeholder:text-slate-600 transition-all"
-                                        />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                                {/* Metric 1: Students */}
+                                <div className="bg-[#1A1A1A] rounded-[2rem] p-6 flex flex-col justify-between min-h-[160px] border border-white/5 hover:border-brand-red/20 transition-all">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3 text-slate-400">
+                                            <div className="p-2 rounded-full bg-white/5">
+                                                <Users size={18} />
+                                            </div>
+                                            <span className="font-medium">Total Students</span>
+                                        </div>
                                     </div>
-                                    <button className="p-2.5 bg-[#111] hover:bg-white/5 rounded-xl border border-white/10 transition-colors text-slate-400 hover:text-white">
-                                        <Filter size={18} />
-                                    </button>
+                                    <div>
+                                        <div className="text-5xl font-bold mb-2 tracking-tight">{totalStudents}</div>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-red/10 text-brand-red text-xs font-bold border border-brand-red/20">
+                                            <ArrowUpRight size={12} /> +{users.length > 0 ? '12' : '0'}%
+                                            <span className="text-slate-500 font-medium ml-1">vs last month</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Metric 2: Submissions */}
+                                <div className="bg-[#1A1A1A] rounded-[2rem] p-6 flex flex-col justify-between min-h-[160px] border border-white/5 hover:border-white/10 transition-all">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className="flex items-center gap-3 text-slate-400">
+                                            <div className="p-2 rounded-full bg-white/5">
+                                                <Activity size={18} />
+                                            </div>
+                                            <span className="font-medium">Total Submissions</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-5xl font-bold mb-2 tracking-tight">{submissions.length}</div>
+                                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                                            <ArrowUpRight size={12} /> Active
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                    <thead>
-                                        <tr className="border-b border-white/5 text-xs text-slate-500 uppercase tracking-widest font-mono">
-                                            <th className="pb-4 pl-4">Contest Name</th>
-                                            <th className="pb-4">Date</th>
-                                            <th className="pb-4">Participants</th>
-                                            <th className="pb-4">Status</th>
-                                            <th className="pb-4 pr-4 text-right">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="text-sm">
-                                        {[
-                                            { name: "Weekly Challenge #45", date: "Oct 24, 2025", participants: 342, status: "Active" },
-                                            { name: "Dynamic Programming Basics", date: "Oct 28, 2025", participants: 128, status: "Upcoming" },
-                                            { name: "Graph Theory Advanced", date: "Oct 20, 2025", participants: 89, status: "Ended" },
-                                        ].map((contest, i) => (
-                                            <tr key={i} className="group border-b border-white/5 hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-5 pl-4 text-white font-medium group-hover:text-brand-red transition-colors">{contest.name}</td>
-                                                <td className="py-5 text-slate-400">{contest.date}</td>
-                                                <td className="py-5 text-slate-400 font-mono">{contest.participants}</td>
-                                                <td className="py-5">
-                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold border uppercase tracking-wide ${contest.status === "Active" ? "bg-brand-red/10 text-brand-red border-brand-red/20" :
-                                                        contest.status === "Upcoming" ? "bg-orange-500/10 text-orange-400 border-orange-500/20" :
-                                                            "bg-slate-800 text-slate-400 border-slate-700"
-                                                        }`}>
-                                                        {contest.status}
-                                                    </span>
-                                                </td>
-                                                <td className="py-5 pr-4 text-right">
-                                                    <button className="text-slate-600 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg">
-                                                        <MoreHorizontal size={18} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                        {/* New Gladiators Section */}
+                        <div className="bg-[#111] rounded-[2.5rem] p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                            <div>
+                                <h3 className="text-2xl font-bold mb-2">{totalStudents > 0 ? `${newStudents.length} recent gladiators joined!` : 'No gladiators yet'}</h3>
+                                <p className="text-slate-400">The arena is growing. Prepare the servers.</p>
+                            </div>
+
+                            <div className="flex items-center gap-6">
+                                <div className="flex -space-x-4">
+                                    {newStudents.map((user, i) => (
+                                        <div key={user.id || i} className="w-14 h-14 rounded-full border-4 border-[#111] bg-slate-800 hover:-translate-y-2 transition-transform duration-300 relative z-10 overflow-hidden" title={user.name}>
+                                            <img
+                                                src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${user.name || user.id}`}
+                                                alt={user.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    ))}
+                                    {totalStudents === 0 && (
+                                        <div className="text-slate-500 text-sm">No users found</div>
+                                    )}
+                                </div>
+                            </div>
+                            <Link href="/admin/users">
+                                <button className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-colors">
+                                    <ArrowUpRight size={20} />
+                                </button>
+                            </Link>
+                        </div>
+                        {/* Battle Activity Chart (Using Submissions) */}
+                        <div className="bg-[#111] rounded-[2.5rem] p-8 min-h-[300px] relative">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold">Submission Activity</h2>
+                                <Link href="/admin/contests">
+                                    <button className="flex items-center gap-2 text-sm font-medium text-slate-400 bg-white/5 px-4 py-2 rounded-full hover:bg-white/10 transition-colors">
+                                        View Contests <ArrowUpRight size={14} />
+                                    </button>
+                                </Link>
+                            </div>
+
+                            <div className="flex items-end justify-between h-48 px-4 gap-4">
+                                <div className="w-full flex items-end justify-between gap-4 h-full">
+                                    {Array.from({ length: 7 }).map((_, i) => {
+                                        const date = new Date();
+                                        date.setDate(date.getDate() - (6 - i));
+                                        const dateStr = date.toISOString().split('T')[0];
+
+                                        const count = submissions.filter((s: any) => s.submittedAt && s.submittedAt.startsWith(dateStr)).length;
+
+                                        // Find max count for normalization
+                                        const maxCount = Math.max(...Array.from({ length: 7 }).map((_, j) => {
+                                            const d = new Date();
+                                            d.setDate(d.getDate() - (6 - j));
+                                            const dStr = d.toISOString().split('T')[0];
+                                            return submissions.filter((s: any) => s.submittedAt && s.submittedAt.startsWith(dStr)).length;
+                                        })) || 1; // Avoid division by zero
+
+                                        const height = Math.max((count / maxCount) * 100, 5); // Minimum 5% height
+
+                                        return (
+                                            <div key={i} className="relative w-full group flex flex-col justify-end h-full">
+                                                <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#222] text-white text-xs font-bold py-1.5 px-3 rounded-xl mb-2 flex flex-col items-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xl z-20 whitespace-nowrap pointer-events-none">
+                                                    {count} Submissions
+                                                    <span className="text-[10px] font-normal text-slate-400">{format(date, 'MMM d')}</span>
+                                                    <div className="w-2 h-2 bg-[#222] rotate-45 -mb-4 absolute -bottom-1" />
+                                                </div>
+
+                                                <div
+                                                    className={`w-full rounded-2xl transition-all duration-500 ${count > 0 ? 'bg-gradient-to-b from-brand-red to-red-900/50' : 'bg-white/5'}`}
+                                                    style={{ height: `${height}%` }}
+                                                />
+                                                <div className="mt-2 text-center text-[10px] text-slate-500 font-medium">
+                                                    {format(date, 'd')}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className="absolute bottom-6 left-8 text-4xl font-bold text-white/20">
+                                {submissions.length > 0 ? submissions.length : '0'} <span className="text-lg text-slate-600 font-normal">total submissions</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="bg-[#050505] border border-white/5 rounded-3xl p-6">
-                            <h2 className="text-xl font-bold text-white mb-6">Quick Actions</h2>
-                            <div className="space-y-3">
-                                {[
-                                    "Manage Batches",
-                                    "View Reports",
-                                    "System Settings",
-                                    "User Management"
-                                ].map((action) => (
-                                    <button key={action} className="w-full text-left px-5 py-4 rounded-xl text-sm font-medium text-slate-400 bg-[#111] hover:bg-[#151515] hover:text-white border border-transparent hover:border-white/5 transition-all flex items-center justify-between group">
-                                        {action}
-                                        <ArrowUpRight size={16} className="text-slate-600 group-hover:text-brand-red transition-colors" />
-                                    </button>
-                                ))}
+                    {/* Right Column (Sidebar Content) */}
+                    <div className="xl:col-span-4 flex flex-col gap-8">
+
+                        {/* Live Battles List */}
+                        <div className="bg-[#111] rounded-[2.5rem] p-8">
+                            <h2 className="text-xl font-bold mb-6">Live & Upcoming</h2>
+
+                            <div className="flex flex-col gap-4">
+                                {liveBattles.length > 0 ? liveBattles.map((item: any, i) => (
+                                    <div key={i} className="flex items-center gap-4 p-2 rounded-2xl hover:bg-white/5 transition-colors group cursor-pointer">
+                                        <div className={`w-16 h-16 rounded-2xl ${item.status === 'Active' ? 'bg-blue-500' : 'bg-slate-700'} flex items-center justify-center shadow-lg group-hover:scale-95 transition-transform`}>
+                                            <Trophy size={24} className="text-white" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-slate-200 truncate max-w-[120px]">{item.title}</h4>
+                                            <p className="text-xs text-slate-500 font-medium">
+                                                {format(new Date(item.startTime), 'MMM d, h:mm a')}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.status === 'Active' ? 'bg-green-500/10 text-green-500' :
+                                                'bg-white/10 text-slate-300'
+                                                }`}>
+                                                {item.status || 'Scheduled'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <p className="text-slate-500 text-sm">No active or upcoming contests found.</p>
+                                )}
                             </div>
+
+                            <Link href="/admin/contests">
+                                <button className="w-full mt-6 py-4 rounded-full border border-white/10 text-sm font-bold text-slate-300 hover:bg-white/5 transition-colors">
+                                    View all battles
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

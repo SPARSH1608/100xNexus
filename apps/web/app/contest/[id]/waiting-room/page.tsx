@@ -1,7 +1,7 @@
 'use client'
 import { useParams, useRouter } from "next/navigation";
 import ImageSphere from "../../../../components/ImageSphere";
-import Navbar from "../../../components/layout/navbar";
+import Sidebar from "../../../components/layout/sidebar";
 import { useEffect, useState } from "react";
 import { getContestByIdAPI, joinContestAPI } from "../../../api";
 
@@ -94,7 +94,7 @@ export default function ContestPage() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans overflow-hidden relative">
-            <Navbar />
+            <Sidebar />
 
             {/* Background Sphere */}
             <div className="absolute inset-0 z-0">
@@ -102,7 +102,7 @@ export default function ContestPage() {
             </div>
 
             {/* Overlay Content */}
-            <div className="relative z-10 container mx-auto px-4 h-full min-h-screen flex flex-col justify-center items-center pointer-events-none">
+            <div className="relative z-10 container mx-auto px-4 h-full min-h-screen flex flex-col justify-center items-center pointer-events-none md:pl-24">
                 <div className="glass-card p-8 md:p-12 rounded-[2rem] text-center max-w-2xl w-full border border-white/10 backdrop-blur-md bg-black/40 pointer-events-auto">
                     <div className="mb-4">
                         <span className="inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></span>

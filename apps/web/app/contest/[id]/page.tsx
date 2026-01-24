@@ -1,14 +1,14 @@
 'use client'
 import { useParams } from "next/navigation"
-import Navbar from "../../components/layout/navbar"
+import Sidebar from "../../components/layout/sidebar"
 import { Trophy } from "lucide-react"
 
 export default function ContestPage() {
     const { id } = useParams()
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-brand-red/30">
-            <Navbar />
-            <div className="container mx-auto px-4 pt-24 pb-12 flex flex-col items-center justify-center min-h-[80vh]">
+            <Sidebar />
+            <div className="container mx-auto px-4 pt-24 md:pt-12 md:pl-24 pb-12 flex flex-col items-center justify-center min-h-[80vh]">
                 <div className="w-20 h-20 rounded-2xl bg-brand-red/10 flex items-center justify-center text-brand-red mb-6 border border-brand-red/20">
                     <Trophy size={40} />
                 </div>

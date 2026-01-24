@@ -590,3 +590,24 @@ export const getLeaderboard = async (req: Request, res: Response) => {
         })
     }
 }
+
+export const getAllSubmissions = async (req: Request, res: Response) => {
+    try {
+        const submissions = await prisma.quizSubmission.findMany({
+            orderBy: {
+                submittedAt: 'desc'
+            }
+        })
+        res.status(200).json({
+            success: true,
+            data: submissions,
+            message: 'All submissions fetched successfully'
+        })
+    } catch (error) {
+        console.log('error while fetching submissions', error)
+        res.status(500).json({
+            success: false,
+            error: error
+        })
+    }
+}

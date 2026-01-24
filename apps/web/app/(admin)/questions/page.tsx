@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { useContestStore } from "../../store"
-import Navbar from "../../components/layout/navbar"
+import Sidebar from "../../components/layout/sidebar"
 import { Search, Filter, MoreHorizontal, FileQuestion, Edit2, Trash2, X, Check, ChevronDown } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast, ToastContainer } from "react-toastify"
@@ -102,14 +102,14 @@ export default function QuestionsPage() {
 
     return (
         <div className="min-h-screen bg-black text-slate-100 selection:bg-brand-red/30 relative overflow-hidden">
-            <Navbar />
+            <Sidebar />
             <ToastContainer position="top-right" theme="dark" />
 
             <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
                 <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] rounded-full bg-brand-red/5 blur-[120px]" />
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 relative z-10">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 md:pt-12 md:pl-24 pb-12 relative z-10">
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold font-serif text-white mb-2">Question Bank</h1>
                     <p className="text-slate-400">Repository of all coding challenges across contests.</p>

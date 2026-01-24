@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import { ArrowRight, Zap, Trophy, Globe, Shield, Terminal, ArrowUpRight, Target } from 'lucide-react';
 import Navbar from './components/layout/navbar';
+import { useAuthStore } from './store';
+import { useEffect, useState } from 'react';
 
 
 const containerVariants: Variants = {
@@ -31,6 +33,15 @@ const itemVariants: Variants = {
 };
 
 export default function Home() {
+  const { isAuthenticated } = useAuthStore((s) => s);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return (
     <div className="min-h-screen bg-black text-slate-100 font-sans selection:bg-brand-red/30 overflow-x-hidden">
       <Navbar />
@@ -42,7 +53,7 @@ export default function Home() {
         <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] rounded-full bg-brand-red/5 blur-[150px]" />
       </div>
 
-      <main className="relative z-10 container mx-auto px-4 pt-32 pb-20">
+      <main className={`relative z-10 container mx-auto px-4 pt-32 pb-20`}>
 
         <div className="flex flex-col md:flex-row items-end justify-between mb-32 gap-12 min-h-[60vh]">
           <motion.div
@@ -92,7 +103,7 @@ export default function Home() {
               </div>
             </div>
 
-            <Link href="/signin">
+            <Link href={isAuthenticated ? "/dashboard" : "/signin"}>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

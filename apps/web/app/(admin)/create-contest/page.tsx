@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
-import Navbar from "../../components/layout/navbar";
+import Sidebar from "../../components/layout/sidebar";
 import { useBatchStore, useContestStore, useAuthStore } from "../../store";
 import { toast, ToastContainer } from "react-toastify";
 import { useRouter } from "next/navigation";
@@ -103,10 +103,10 @@ export default function CreateContestPage() {
 
     return (
         <div className="min-h-screen bg-black text-slate-100 selection:bg-brand-red/30">
-            <Navbar />
+            <Sidebar />
             <ToastContainer position="top-right" theme="dark" />
 
-            <main className="max-w-4xl mx-auto px-4 pt-24 pb-12">
+            <main className="max-w-4xl mx-auto px-4 pt-24 md:pt-12 md:pl-24 pb-12">
 
                 {/* Header */}
                 <div className="mb-10 text-center">

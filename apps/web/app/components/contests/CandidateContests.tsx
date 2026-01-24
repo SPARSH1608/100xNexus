@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useContestStore } from "../../store"
 import { toast, ToastContainer } from "react-toastify"
-import Navbar from "../layout/navbar"
+import Sidebar from "../layout/sidebar"
 import { Calendar, Clock, Search, Trophy, Target, Loader, Play } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
@@ -40,8 +40,8 @@ export default function CandidateContests() {
                 <div className="absolute top-[20%] right-[20%] w-[600px] h-[600px] rounded-full bg-brand-red/10 blur-[150px] animate-pulse" />
                 <div className="absolute bottom-[20%] left-[20%] w-[500px] h-[500px] rounded-full bg-red-900/10 blur-[150px]" />
             </div>
-            <Navbar />
-            <main className="container mx-auto px-4 pt-24 pb-12 relative z-10">
+            <Sidebar />
+            <main className="container mx-auto px-4 pt-24 md:pt-12 md:pl-24 pb-12 relative z-10">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-40">
                         <Loader className="animate-spin text-brand-red mb-4" size={48} />
@@ -115,9 +115,11 @@ export default function CandidateContests() {
                                         </div>
 
                                         <button
-                                            onClick={() =>{(
-                                                contest.status === 'LIVE' ? router.push(`/contest/${contest.id}`) : contest.status === 'FINISHED' ? router.push(`/contest/${contest.id}/leaderboard`) : contest.status === 'WAITING' ? router.push(`/contest/${contest.id}/waiting-room`) : router.push(`/contest/${contest.id}`)
-                                            )}}
+                                            onClick={() => {
+                                                (
+                                                    contest.status === 'LIVE' ? router.push(`/contest/${contest.id}`) : contest.status === 'FINISHED' ? router.push(`/contest/${contest.id}/leaderboard`) : contest.status === 'WAITING' ? router.push(`/contest/${contest.id}/waiting-room`) : router.push(`/contest/${contest.id}`)
+                                                )
+                                            }}
                                             className="w-full py-3 bg-white/5 hover:bg-white text-slate-300 hover:text-black font-bold rounded-xl border border-white/5 transition-all flex items-center justify-center gap-2 group/btn"
                                         >
                                             <Play size={16} className="fill-current" />
