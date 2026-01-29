@@ -1,135 +1,149 @@
-# Turborepo starter
+# Contest Management System
 
-This Turborepo starter is maintained by the Turborepo core team.
+This is a **Turborepo** monorepo containing a full-stack **Competitive Programming & Contest Platform**. It is designed to host, manage, and run coding or quiz-based contests with ease.
 
-## Using this example
+## 🌟 What is this Project?
 
-Run the following command:
+This project is a comprehensive **Contest Management System** that allows administrators to create and schedule contests, and users to participate in them in real-time.
 
-```sh
-npx create-turbo@latest
-```
+**Core Functionalities:**
+- **For Participants:** A clean, responsive interface to view upcoming contests, register, and enter the "Contest Arena" to solve problems.
+- **For Administrators:** A powerful dashboard to create contests, manage questions (CRUD), and monitor active sessions.
+- **Real-time Lifecycle:** Automated background jobs manage the precise start and end times of contests.
+- **Scalable Architecture:** Built with a separate backend and frontend to handle high traffic, utilizing Redis for caching and job queues.
 
-## What's inside?
+It utilizes a shared package architecture for maximum code reuse and type safety.
 
-This Turborepo includes the following packages/apps:
+## 🏗 Project Structure
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+The project is organized as follows:
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+├── apps
+│   ├── web            # Next.js 16 frontend application
+│   └── http-backend   # Express.js backend (running with Bun)
+├── packages
+│   ├── db             # Prisma database schema and client
+│   ├── ui             # Shared React UI components
+│   ├── eslint-config  # Shared ESLint configurations
+│   └── typescript-config # Shared TypeScript configurations
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 🚀 Getting Started
 
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- [Bun](https://bun.sh/) (Required for backend)
+- [PostgreSQL](https://www.postgresql.org/) (or a compatible SQL database)
+- [Redis](https://redis.io/) (Required for backend caching/queues)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd contest
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   # or
+   pnpm install
+   # or
+   bun install
+   ```
+
+### Configuration
+
+You need to set up environment variables for the apps and packages.
+
+**1. Database (`packages/db/.env`):**
+Create a `.env` file in `packages/db` and add your database connection string:
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+DATABASE_URL="postgresql://user:password@localhost:5432/contest_db"
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
+**2. Backend (`apps/http-backend/.env`):**
+Create a `.env` file in `apps/http-backend` with the following variables:
 ```
-cd my-turborepo
+PORT=3001
+JWT_SECRET=your_secret_key
+DATABASE_URL="postgresql://user:password@localhost:5432/contest_db"
+REDIS_URL="redis://localhost:6379"
+```
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
+**3. Frontend (`apps/web/.env.local`):**
+Create a `.env.local` file in `apps/web` (if needed for API URLs):
+```
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+```
+
+### Database Setup
+
+Initialize the database using Prisma from the `db` package:
+
+```bash
+cd packages/db
+npx prisma generate
+npx prisma db push
+# or to create a migration
+npx prisma migrate dev
+```
+
+### Running the Project
+
+To start all applications (Frontend + Backend) simultaneously:
+
+```bash
 turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- **Web Frontend:** [http://localhost:3000](http://localhost:3000)
+- **HTTP Backend:** [http://localhost:3001](http://localhost:3001)
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+## 📦 Applications & Features
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+### 1. Web Frontend (`apps/web`)
 
-### Remote Caching
+A modern Next.js application built with React 19, Tailwind CSS, and Zustand.
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+**Key Routes:**
+- **Admin Dashboard** (`/contests/[id]`): specialized interface for administrators to manage specific contests.
+- **User Dashboard** (`/dashboard`): Personal dashboard for users to view their contests and progress.
+- **Contest Arena** (`/contest/[id]`): Public-facing page where users participate in contests.
+- **Authentication** (`/signin`): User login/signup flow.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+**Tech Stack:** Next.js 16, React 19, Tailwind CSS, Lucide React, Framer Motion, Three.js (Fiber/Drei).
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+### 2. HTTP Backend (`apps/http-backend`)
 
-```
-cd my-turborepo
+A high-performance REST API built with Express and optimized with Bun.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+**API Endpoints:**
+- `/auth`: Authentication routes (Login/Signup).
+- `/user`: User profile and data management.
+- `/contest`: Contest creation, retrieval, and management.
+- `/batch`: Batch management for admin operations.
+- `/question`: Question CRUD operations for contests.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+**Key Features:**
+- **Contest Lifecycle Job:** A background job (cron/redis) that manages the state of contests (starting/stopping based on schedule).
+- **Middleware:** Custom authentication and admin middleware for secure access.
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+**Tech Stack:** Express, Bun, TypeScript, Redis, Bcrypt, JWT, Node-Cron.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## 🛠 Shared Packages
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+- **`@repo/db`**: Contains the Prisma schema and generated client, ensuring type-safe database access across both apps.
+- **`@repo/ui`**: A shared library of UI components to maintain design consistency.
+- **`@repo/config`**: Shared ESLint and TypeScript configurations.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## 🤝 Contributing
 
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+1. Fork the repo
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

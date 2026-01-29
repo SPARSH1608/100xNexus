@@ -5,7 +5,7 @@ import Sidebar from "../../components/layout/sidebar";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Edit2, Trash2, X, Search, Layers, Box } from "lucide-react";
+import { Plus, Edit2, Trash2, X, Search, Layers, Box, Loader } from "lucide-react";
 
 export default function BatchesPage() {
     const { batches, getBatches, updateBatch, deleteBatch, createBatch, getBatchById } = useBatchStore((state) => state);
@@ -14,10 +14,12 @@ export default function BatchesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [batchId, setBatchId] = useState('');
     const [batchName, setBatchName] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleCreateBatch = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
+            setIsSubmitting(true);
             const formData = new FormData(e.currentTarget);
             const name = formData.get('name');
             const res = await createBatch(name as string);
@@ -26,12 +28,15 @@ export default function BatchesPage() {
         } catch (error: any) {
             console.log(error);
             toast.error(error.message || 'Failed to create batch');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const handleUpdateBatch = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
+            setIsSubmitting(true);
             const formData = new FormData(e.currentTarget);
             const name = formData.get('name');
             const res = await updateBatch(batchId, name as string);
@@ -40,6 +45,8 @@ export default function BatchesPage() {
         } catch (error: any) {
             console.log(error);
             toast.error(error.message || 'Failed to update batch');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -193,9 +200,11 @@ export default function BatchesPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-8 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold shadow-lg hover:shadow-brand-red/25 transition-all"
+                                    disabled={isSubmitting}
+                                    className="px-8 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold shadow-lg hover:shadow-brand-red/25 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Create Batch
+                                    {isSubmitting ? <Loader className="animate-spin" size={16} /> : null}
+                                    {isSubmitting ? 'Creating...' : 'Create Batch'}
                                 </button>
                             </div>
                         </form>
@@ -226,9 +235,11 @@ export default function BatchesPage() {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-8 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold shadow-lg hover:shadow-brand-red/25 transition-all"
+                                    disabled={isSubmitting}
+                                    className="px-8 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-xl font-bold shadow-lg hover:shadow-brand-red/25 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Update Batch
+                                    {isSubmitting ? <Loader className="animate-spin" size={16} /> : null}
+                                    {isSubmitting ? 'Updating...' : 'Update Batch'}
                                 </button>
                             </div>
                         </form>

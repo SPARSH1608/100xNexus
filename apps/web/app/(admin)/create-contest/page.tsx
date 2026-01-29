@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { createContestAPI, createQuestionAPI } from "../../api"; // Direct import for specialized usage or use store actions if preferred
 import {
     Zap, Shield, Check, Trophy, Rocket, Plus, Search,
-    FileText, Clock, HelpCircle, X, ChevronRight, FileQuestion
+    FileText, Clock, HelpCircle, X, ChevronRight, FileQuestion, Loader
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -293,7 +293,8 @@ export default function CreateContestPage() {
                                     disabled={isLoading}
                                     className="px-8 py-3 bg-brand-red hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-brand-red/20 transition-all flex items-center gap-2"
                                 >
-                                    {isLoading ? 'Initializing...' : 'Launch Battle'} <Rocket size={18} />
+                                    {isLoading ? <Loader className="animate-spin" size={18} /> : <Rocket size={18} />}
+                                    {isLoading ? 'Initializing...' : 'Launch Battle'}
                                 </button>
                             </div>
                         </motion.div>

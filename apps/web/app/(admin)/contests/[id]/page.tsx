@@ -5,7 +5,7 @@ import { useBatchStore, useContestStore } from "../../../store"
 import { useParams, useRouter } from "next/navigation"
 import Sidebar from "../../../components/layout/sidebar"
 import { motion, AnimatePresence } from "framer-motion"
-import { Trophy, Calendar, Clock, Users, Plus, Edit2, Trash2, CheckCircle2, XCircle, Search, Target, HelpCircle, Save, ArrowLeft } from "lucide-react"
+import { Trophy, Calendar, Clock, Users, Plus, Edit2, Trash2, CheckCircle2, XCircle, Search, Target, HelpCircle, Save, ArrowLeft, Loader } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
 
 const Modal = ({ children, onClose, title }: { children: React.ReactNode, onClose: () => void, title: string }) => (
@@ -35,6 +35,7 @@ export default function ContestDetails() {
 
     const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false)
     const [editingQuestion, setEditingQuestion] = useState<any>(null)
+    const [isSaving, setIsSaving] = useState(false)
     const [options, setOptions] = useState<{ title: string, isCorrect: boolean }[]>([
         { title: "", isCorrect: false },
         { title: "", isCorrect: false }
@@ -83,6 +84,7 @@ export default function ContestDetails() {
         const timeLimit = Number(formData.get("timeLimit"))
 
         try {
+            setIsSaving(true)
             if (editingQuestion) {
                 await updateQuestion(editingQuestion.id, title, description, score, options, timeLimit)
                 toast.success("Question updated successfully")
@@ -95,6 +97,8 @@ export default function ContestDetails() {
         } catch (error: any) {
             console.error(error)
             toast.error(error.message || "Failed to save question")
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -320,8 +324,9 @@ export default function ContestDetails() {
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full py-3 bg-brand-red hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-brand-red/20 transition-all flex items-center justify-center gap-2">
-                                <Save size={18} /> Save Question
+                            <button disabled={isSaving} type="submit" className="w-full py-3 bg-brand-red hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-brand-red/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isSaving ? <Loader className="animate-spin" size={18} /> : <Save size={18} />}
+                                {isSaving ? "Saving..." : "Save Question"}
                             </button>
                         </form>
                     </Modal>
