@@ -5,10 +5,9 @@ import Sidebar from "../../../components/layout/sidebar";
 import { useEffect, useState } from "react";
 import { getContestByIdAPI, joinContestAPI } from "../../../api";
 
-// Generate dummy avatars
-// Generate dummy avatars using Vercel avatars for better stability/CORS
+// Use local avatar images for better reliability
 const AVATARS = Array.from({ length: 20 }).map((_, i) =>
-    `https://avatar.vercel.sh/contest-user-${i}`
+    `/avatars/avatar-${i + 1}.svg`
 );
 
 export default function ContestPage() {

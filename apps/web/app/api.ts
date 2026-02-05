@@ -155,14 +155,14 @@ export const deleteBatchAPI = async (batchId: string) => {
 
 // -------------------------------------CONTEST-------------------------------------
 
-export const createContestAPI = async (title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
+export const createContestAPI = async (title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => {
     const token = useAuthStore.getState().token
     console.log('token', token, title)
     let newStartTime = new Date(startTime).getTime() + 5 * 60 * 1000;
     const response = await axios.post(
         `${BASE_URL}/contest`,
         {
-            title, isOpenAll, startTime: new Date(newStartTime).toISOString(), batchIds
+            title, isOpenAll, startTime: new Date(newStartTime).toISOString(), batchIds, showResults
         },
         {
             headers: {
@@ -178,13 +178,13 @@ export const createContestAPI = async (title: string, isOpenAll: boolean, startT
     return response.data
 }
 
-export const updateContestAPI = async (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
+export const updateContestAPI = async (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => {
     const token = useAuthStore.getState().token
     console.log('token', token, title)
     const response = await axios.patch(
         `${BASE_URL}/contest/${contestId}`,
         {
-            title, isOpenAll, startTime, batchIds
+            title, isOpenAll, startTime, batchIds, showResults
         },
         {
             headers: {

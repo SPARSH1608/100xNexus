@@ -31,7 +31,7 @@ const Modal = ({ children, onClose, title }: { children: React.ReactNode, onClos
 export default function ContestDetails() {
     const params = useParams()
     const router = useRouter()
-    const { contest, getContestById, createQuestion, updateQuestion, deleteQuestion } = useContestStore()
+    const { contest, getContestById, createQuestion, updateQuestion, deleteQuestion, updateContest } = useContestStore()
 
     const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false)
     const [editingQuestion, setEditingQuestion] = useState<any>(null)
@@ -43,6 +43,7 @@ export default function ContestDetails() {
 
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isUpdatingShowResults, setIsUpdatingShowResults] = useState(false)
 
     useEffect(() => {
         const fetchContest = async () => {
@@ -126,6 +127,27 @@ export default function ContestDetails() {
     const addOption = () => setOptions([...options, { title: "", isCorrect: false }])
     const removeOption = (index: number) => setOptions(options.filter((_, i) => i !== index))
 
+    const handleToggleShowResults = async () => {
+        if (!contest) return
+        try {
+            setIsUpdatingShowResults(true)
+            await updateContest(
+                contest.id,
+                contest.title,
+                contest.isOpenAll,
+                contest.startTime,
+                contest.batches?.map((b: any) => b.id) || [],
+                !contest.showResults
+            )
+            await getContestById(contest.id)
+            toast.success(`Results display ${!contest.showResults ? 'enabled' : 'disabled'}`)
+        } catch (error: any) {
+            toast.error(error.message || "Failed to update setting")
+        } finally {
+            setIsUpdatingShowResults(false)
+        }
+    }
+
     if (isLoading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>
     if (error) return <div className="min-h-screen bg-black flex items-center justify-center text-red-500">Error: {error}</div>
     if (!contest) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Contest not found</div>
@@ -192,6 +214,30 @@ export default function ContestDetails() {
                             ) : (
                                 <p className="text-slate-500 text-sm italic">No specific batches assigned (Public)</p>
                             )}
+                        </div>
+
+                        <div className="bg-[#050505]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <Trophy size={18} className="text-brand-red" /> Contest Settings
+                            </h3>
+                            <div
+                                onClick={handleToggleShowResults}
+                                className={`cursor-pointer border rounded-xl p-4 transition-all hover:bg-white/5 flex items-center justify-between ${contest.showResults ? 'border-brand-red bg-brand-red/5' : 'border-white/10 bg-[#111]'
+                                    } ${isUpdatingShowResults ? 'opacity-50 cursor-wait' : ''}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <CheckCircle2 size={20} className={contest.showResults ? "text-brand-red" : "text-slate-500"} />
+                                    <div>
+                                        <span className="font-bold text-white block">Show Results After Question</span>
+                                        <p className="text-xs text-slate-500">Display voting results for 5s after each question.</p>
+                                    </div>
+                                </div>
+                                <div className={`w-10 h-6 rounded-full p-1 transition-colors ${contest.showResults ? 'bg-brand-red' : 'bg-white/10'
+                                    }`}>
+                                    <div className={`w-4 h-4 rounded-full bg-white transition-transform ${contest.showResults ? 'translate-x-4' : 'translate-x-0'
+                                        }`} />
+                                </div>
+                            </div>
                         </div>
                     </div>
 

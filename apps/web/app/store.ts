@@ -25,8 +25,8 @@ type ContestState = {
     contests: any[],
     contest: any,
     getContests: () => Promise<void>,
-    createContest: (title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => Promise<any>,
-    updateContest: (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => Promise<any>,
+    createContest: (title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => Promise<any>,
+    updateContest: (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => Promise<any>,
     deleteContest: (contestId: string) => Promise<any>,
     getContestById: (contestId: string) => any
     getLiveContests: () => Promise<void>,
@@ -110,15 +110,15 @@ export const useContestStore = create<ContestState>((set, get) => ({
         const res = await getAllContestsAPI()
         set({ contests: res.data })
     },
-    createContest: async (title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
-        const res = await createContestAPI(title, isOpenAll, startTime, batchIds)
+    createContest: async (title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => {
+        const res = await createContestAPI(title, isOpenAll, startTime, batchIds, showResults)
         if (res.success) {
             set((state) => ({ contests: [...state.contests, res.data] }))
         }
         return res
     },
-    updateContest: async (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[]) => {
-        const res = await updateContestAPI(contestId, title, isOpenAll, startTime, batchIds)
+    updateContest: async (contestId: string, title: string, isOpenAll: boolean, startTime: string, batchIds: string[], showResults: boolean) => {
+        const res = await updateContestAPI(contestId, title, isOpenAll, startTime, batchIds, showResults)
         if (res.success) {
             set((state) => ({
                 contests: state.contests.map((c) => c.id === contestId ? res.data : c)

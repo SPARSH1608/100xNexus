@@ -10,12 +10,16 @@ function ImagePlane({ url, position, rotation }: { url: string; position: [numbe
 
     useEffect(() => {
         const loader = new THREE.TextureLoader();
-        loader.setCrossOrigin('anonymous');
-        loader.load(url, (loadedTexture) => {
-            setTexture(loadedTexture);
-        }, undefined, (err) => {
-            console.error("Error loading texture from " + url, err);
-        });
+        loader.load(
+            url,
+            (loadedTexture) => {
+                setTexture(loadedTexture);
+            },
+            undefined,
+            (err) => {
+                console.error("Error loading texture from " + url, err);
+            }
+        );
     }, [url]);
 
     return (
@@ -24,7 +28,7 @@ function ImagePlane({ url, position, rotation }: { url: string; position: [numbe
             {texture ? (
                 <meshBasicMaterial map={texture} side={THREE.DoubleSide} transparent />
             ) : (
-                <meshBasicMaterial color="#DC2626" side={THREE.DoubleSide} transparent opacity={0.8} />
+                <meshBasicMaterial color="#444444" side={THREE.DoubleSide} transparent opacity={0.3} />
             )}
         </mesh>
     );
@@ -89,7 +93,7 @@ export default function ImageSphere({ images }: { images: string[] }) {
     const displayImages = images.length > 0 ? images : Array(20).fill("https://avatar.vercel.sh/random");
 
     return (
-        <div className="w-full h-full min-h-[500px]">
+        <div className="absolute inset-0 w-full h-full">
             <Canvas camera={{ position: [0, 0, 12], fov: 60 }}>
                 {/* <fog attach="fog" args={['#000000', 8, 20]} /> */}
                 <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={0.5} />

@@ -26,6 +26,7 @@ export default function CreateContestPage() {
         title: "",
         startTime: "",
         isOpenAll: false,
+        showResults: false,
         batchIds: [] as string[]
     });
 
@@ -68,7 +69,8 @@ export default function CreateContestPage() {
                 contestData.title,
                 contestData.isOpenAll,
                 new Date(contestData.startTime).toISOString(),
-                contestData.batchIds
+                contestData.batchIds,
+                contestData.showResults
             );
 
             if (res.success) {
@@ -179,6 +181,24 @@ export default function CreateContestPage() {
                                             <span className="font-bold text-white">Restricted</span>
                                         </div>
                                         <p className="text-xs text-slate-500">Only selected batches.</p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-2">
+                                    <div
+                                        onClick={() => setContestData({ ...contestData, showResults: !contestData.showResults })}
+                                        className={`cursor-pointer border rounded-xl p-4 transition-all hover:bg-white/5 flex items-center justify-between ${contestData.showResults ? 'border-brand-red bg-brand-red/5' : 'border-white/10 bg-[#111]'}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Check size={20} className={contestData.showResults ? "text-brand-red" : "text-slate-500"} />
+                                            <div>
+                                                <span className="font-bold text-white block">Show Results After Question</span>
+                                                <p className="text-xs text-slate-500">Display voting results for 5s after each question.</p>
+                                            </div>
+                                        </div>
+                                        <div className={`w-10 h-6 rounded-full p-1 transition-colors ${contestData.showResults ? 'bg-brand-red' : 'bg-white/10'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${contestData.showResults ? 'translate-x-4' : 'translate-x-0'}`} />
+                                        </div>
                                     </div>
                                 </div>
 

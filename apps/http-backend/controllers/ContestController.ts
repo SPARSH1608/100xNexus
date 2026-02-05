@@ -14,7 +14,7 @@ declare global {
 }
 export const createContest = async (req: Request, res: Response) => {
     try {
-        let { title, isOpenAll, startTime, batchIds } = req.body;
+        let { title, isOpenAll, startTime, batchIds, showResults } = req.body;
         console.log('create contest', req.body)
         const userId = req.userId
 
@@ -69,7 +69,8 @@ export const createContest = async (req: Request, res: Response) => {
                 joinCode: code,
                 batches: isOpenAll ? undefined :
                     { connect: batchIds.map((id: string) => ({ id })) },
-                status: 'DRAFT'
+                status: 'DRAFT',
+                showResults: showResults || false
 
             }
         })
@@ -114,12 +115,13 @@ export const updateContest = async (req: Request, res: Response) => {
             return;
         }
 
-        const { title, isOpenAll, startTime, batchIds } = req.body;
+        const { title, isOpenAll, startTime, batchIds, showResults } = req.body;
         console.log("update contest payload", req.body);
         const updateData: any = {};
         if (title !== undefined) updateData.title = title;
         if (startTime !== undefined) updateData.startTime = new Date(startTime);
         if (isOpenAll !== undefined) updateData.isOpenAll = isOpenAll;
+        if (showResults !== undefined) updateData.showResults = showResults;
 
         if (isOpenAll === true) {
             updateData.batches = { set: [] };
@@ -130,9 +132,12 @@ export const updateContest = async (req: Request, res: Response) => {
                 };
             }
         }
-        if (startTime !== undefined) {
-            updateData.endTime = new Date(new Date(startTime).getTime() + existingContest.questions.reduce((sum, q) => {
-                return q.timeLimit + sum
+        if (startTime !== undefined || showResults !== undefined) {
+            const start = startTime ? new Date(startTime) : existingContest.startTime;
+            const isShowResults = showResults !== undefined ? showResults : existingContest.showResults;
+            const buffer = isShowResults ? 5 : 0;
+            updateData.endTime = new Date(start.getTime() + existingContest.questions.reduce((sum, q) => {
+                return q.timeLimit + buffer + sum
             }, 0) * 1000)
         }
 
@@ -143,7 +148,7 @@ export const updateContest = async (req: Request, res: Response) => {
             data: updateData
         })
 
-        if (startTime !== undefined) {
+        if (startTime !== undefined || showResults !== undefined) {
             await recalculateEndTime(contestId)
         }
 

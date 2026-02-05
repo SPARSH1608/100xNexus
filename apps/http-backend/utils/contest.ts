@@ -15,7 +15,7 @@ export const recalculateEndTime = async (contestId: string) => {
             throw new Error('Contest not found')
         }
         const totalTime = contest.questions.reduce((sum, q) => {
-            return q.timeLimit + sum
+            return q.timeLimit + (contest.showResults ? 5 : 0) + sum
         }, 0)
         const endTime = new Date(
             contest.startTime.getTime() + totalTime * 1000

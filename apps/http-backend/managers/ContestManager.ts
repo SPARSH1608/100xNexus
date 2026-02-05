@@ -77,7 +77,7 @@ export class ContestManager {
         const tick = async () => {
             if (!isStreamActive) return;
 
-            const payload = this.computeCurrentQuestion(quizStartTime, contest.questions)
+            const payload = await this.computeCurrentQuestion(quizStartTime, contest.questions, contest.showResults || false)
             if (!payload) {
                 res.write(`data: ${JSON.stringify({ type: 'END' })}\n\n`)
                 return
@@ -87,7 +87,12 @@ export class ContestManager {
                 if (isStreamActive) setTimeout(tick, 2000);
                 return;
             }
-            res.write(`data: ${JSON.stringify({ type: 'QUESTION', payload })}\n\n`)
+            if (payload.results) {
+                const stats = await this.getQuestionStats(contestId, payload.question.id)
+                res.write(`data: ${JSON.stringify({ type: 'RESULTS', payload: { ...payload, stats } })}\n\n`)
+            } else {
+                res.write(`data: ${JSON.stringify({ type: 'QUESTION', payload })}\n\n`)
+            }
 
             // Stream Leaderboard
             const leaderboard = await this.redis.zrevrange(this.leaderboardKey(contestId), 0, 19, 'withscores')
@@ -112,7 +117,40 @@ export class ContestManager {
 
         tick()
     }
-    private computeCurrentQuestion(quizStartTime: number, questions: any[]) {
+
+    private async getQuestionStats(contestId: string, questionId: string) {
+        const submissions = await this.prisma.quizSubmission.findMany({
+            where: {
+                contestId,
+                questionId
+            },
+            include: {
+                user: {
+                    select: {
+                        name: true
+                    }
+                }
+            }
+        })
+
+        const stats: Record<string, { count: number, users: { name: string }[] }> = {}
+
+        submissions.forEach(sub => {
+            const answers = sub.answer as string[] // Assuming array of optionIds
+            if (Array.isArray(answers)) {
+                answers.forEach(optionId => {
+                    if (!stats[optionId]) {
+                        stats[optionId] = { count: 0, users: [] }
+                    }
+                    stats[optionId].count++
+                    stats[optionId].users.push({ name: sub.user.name })
+                })
+            }
+        })
+        return stats
+    }
+
+    private async computeCurrentQuestion(quizStartTime: number, questions: any[], showResults: boolean = false) {
         const now = Date.now()
         const elapsed = (now - quizStartTime) / 1000
 
@@ -137,9 +175,21 @@ export class ContestManager {
             }
 
             cumulativeTime += timeLimit
+
+            if (showResults) {
+                if (elapsed < cumulativeTime + 10) {
+                    return {
+                        results: true,
+                        question: question,
+                        remainingTime: (cumulativeTime + 10 - elapsed) * 1000,
+                        serverTime: Date.now()
+                    }
+                }
+                cumulativeTime += 10
+            }
         }
 
-        this.finishContest(questions[0].contestId)
+        await this.finishContest(questions[0].contestId)
         return null
     }
     async submitAnswer(contestId: string, userId: string, questionId: string, optionIds: string[]) {
@@ -316,9 +366,22 @@ export class ContestManager {
         }
         console.log(result, 'result')
         if (result.length > 0) {
-            await prisma.quizResult.createMany({
-                data: result
-            })
+            // Use upsert to avoid unique constraint errors if contest finishes multiple times
+            for (const entry of result) {
+                await prisma.quizResult.upsert({
+                    where: {
+                        contestId_userId: {
+                            contestId: entry.contestId,
+                            userId: entry.userId
+                        }
+                    },
+                    create: entry,
+                    update: {
+                        finalScore: entry.finalScore,
+                        rank: entry.rank
+                    }
+                })
+            }
         }
         await this.redis.del(this.leaderboardKey(contestId))
     }

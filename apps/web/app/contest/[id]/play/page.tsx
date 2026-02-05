@@ -28,6 +28,7 @@ export default function ContestPlayPage() {
 
     const [leaderboard, setLeaderboard] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [resultsData, setResultsData] = useState<any>(null);
 
     useEffect(() => {
         if (!id || !token) return;
@@ -43,12 +44,19 @@ export default function ContestPlayPage() {
                     setTimeLeft(Math.floor(data.payload.remainingTime / 1000));
                     setSelectedOptions([]);
                     setIsSubmitted(false);
+                    setResultsData(null);
                 } else {
                     setTimeLeft(Math.floor(data.payload.remainingTime / 1000));
                 }
                 setIsLoading(false);
             } else if (data.type === 'WAITING') {
                 setQuestion(null);
+                setResultsData(null);
+                setIsLoading(false);
+            } else if (data.type === 'RESULTS') {
+                setResultsData(data.payload);
+                setQuestion(data.payload.question);
+                setTimeLeft(Math.floor(data.payload.remainingTime / 1000));
                 setIsLoading(false);
             } else if (data.type === 'LEADERBOARD') {
                 setLeaderboard(data.payload);
@@ -114,11 +122,18 @@ export default function ContestPlayPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center">
+            <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-red/5 via-black to-black opacity-30" />
                 <Sidebar />
-                <div className="flex flex-col items-center">
-                    <div className="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mb-6"></div>
-                    <h2 className="text-xl font-clean font-medium text-slate-400">Connecting to Arena...</h2>
+                <div className="flex flex-col items-center relative z-10">
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-brand-red blur-xl opacity-20 animate-pulse-slow" />
+                        <div className="w-16 h-16 border-4 border-white/5 border-t-brand-red rounded-full animate-spin shadow-2xl relative z-10" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-brand-red/10 animate-pulse" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-clean font-bold tracking-widest uppercase text-white animate-pulse">Connecting</h2>
                 </div>
             </div>
         )
@@ -126,13 +141,24 @@ export default function ContestPlayPage() {
 
     if (!question) {
         return (
-            <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center">
+            <div className="min-h-screen bg-black text-white font-sans flex flex-col items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-red/10 via-black to-black opacity-50" />
                 <Sidebar />
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 mb-6 border border-orange-500/20">
-                        <Code2 size={32} />
+                <div className="flex flex-col items-center relative z-10 p-12 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-sm animate-in fade-in zoom-in duration-500">
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-brand-red blur-2xl opacity-20 animate-pulse-slow" />
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-red/20 to-black flex items-center justify-center text-brand-red border border-brand-red/20 shadow-xl relative z-10">
+                            <Code2 size={40} className="animate-pulse" />
+                        </div>
                     </div>
-                    <h2 className="text-2xl font-clean font-bold">Waiting for next question...</h2>
+                    <h2 className="text-3xl font-clean font-bold text-white mb-3 tracking-wide">Get Ready</h2>
+                    <p className="text-slate-400 font-medium tracking-wide uppercase text-sm">Waiting for next question...</p>
+
+                    <div className="mt-8 flex gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce delay-75"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce delay-150"></span>
+                    </div>
                 </div>
             </div>
         )
@@ -155,7 +181,7 @@ export default function ContestPlayPage() {
                 </div>
             </div>
 
-            <div className="container mx-auto px-4 pt-32 md:pt-24 md:pl-24 pb-12 flex-1 flex flex-col max-w-4xl relative">
+            <div className="w-full px-6 md:px-12 pt-32 md:pt-24 md:pl-24 pb-12 flex-1 flex flex-col relative">
                 {/* Main Question Area - Centered and distraction free */}
                 <div className="w-full">
                     <div className="mb-8">
@@ -172,27 +198,107 @@ export default function ContestPlayPage() {
                     </div>
 
                     {/* Content Area: Options or Waiting Screen */}
-                    {!isSubmitted ? (
+                    {resultsData ? (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
+                            <div className="bg-white/5 rounded-3xl p-12 border border-white/10 relative overflow-hidden w-full">
+                                {/* Ambient Background Glow */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-brand-red/5 blur-3xl pointer-events-none" />
+
+                                <h2 className="text-3xl font-bold mb-16 text-center flex items-center justify-center gap-3 relative z-10">
+                                    <span className="bg-white/10 border border-white/5 px-6 py-2 rounded-full text-base uppercase tracking-wider text-slate-300 backdrop-blur-md">Voting Results</span>
+                                </h2>
+
+                                <div className="flex items-end justify-center gap-8 sm:gap-12 h-96 mb-12 px-8 relative z-10 w-full">
+                                    {question.options.map((option) => {
+                                        const stats = resultsData.stats?.[option.id] || { count: 0, users: [] };
+                                        const count = stats.count;
+                                        // The question object from RESULTS payload should have isCorrect.
+                                        const isCorrect = resultsData.question.options.find((o: any) => o.id === option.id)?.isCorrect;
+
+                                        // Max height calculation
+                                        const maxCount = Math.max(...Object.values(resultsData.stats || {}).map((s: any) => s.count), 1);
+                                        const heightPercent = Math.max((count / maxCount) * 100, 10); // Minimum 10% height
+
+                                        return (
+                                            <div key={option.id} className="flex flex-col items-center flex-1 h-full max-w-[180px] group relative">
+                                                {/* Count Badge - Floating */}
+                                                <div className={`mb-6 font-clean font-bold text-5xl transition-all transform group-hover:scale-110 drop-shadow-lg
+                                                    ${isCorrect ? 'text-white' : 'text-slate-400'}
+                                                `}>
+                                                    {count}
+                                                </div>
+
+                                                {/* The Bar */}
+                                                <div
+                                                    className={`w-full rounded-t-3xl transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] relative
+                                                        ${isCorrect
+                                                            ? 'bg-gradient-to-t from-brand-red to-red-500 shadow-[0_0_40px_-5px_var(--brand-red)] border-t-2 border-white/30'
+                                                            : 'bg-white/10 border-t-2 border-white/20 hover:bg-white/15'}
+                                                    `}
+                                                    style={{ height: `${heightPercent}%` }}
+                                                >
+                                                    {/* Tooltip for Voters */}
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none translate-y-2 group-hover:translate-y-0">
+                                                        {stats.users.length > 0 && (
+                                                            <div className="bg-black/90 backdrop-blur-xl border border-white/20 px-4 py-3 rounded-2xl whitespace-nowrap text-sm text-slate-300 shadow-2xl flex flex-col items-center">
+                                                                <div className="text-[10px] uppercase tracking-widest text-slate-500 mb-1">Voters</div>
+                                                                <div className="font-medium text-white">
+                                                                    {stats.users.slice(0, 3).map((u: any) => u.name).join(', ')}
+                                                                    {stats.users.length > 3 && <span className="opacity-50 ml-1">+{stats.users.length - 3}</span>}
+                                                                </div>
+                                                                {/* Triangle Arrow */}
+                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-black/90" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Label */}
+                                                <div className="mt-6 text-base font-medium text-center leading-tight text-slate-400 group-hover:text-white transition-colors line-clamp-2">
+                                                    {option.title}
+                                                </div>
+
+                                                {/* Correct Indicator */}
+                                                {isCorrect && (
+                                                    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-brand-red text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 animate-pulse bg-brand-red/10 px-4 py-1.5 rounded-full border border-brand-red/20">
+                                                        <CheckCircle2 size={14} /> Correct Answer
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    ) : !isSubmitted ? (
                         <>
-                            <div className="grid gap-4 md:grid-cols-1">
+                            <div className="grid gap-6 md:grid-cols-1 w-full">
                                 {question.options.map((option) => (
                                     <button
                                         key={option.id}
                                         onClick={() => handleOptionSelect(option.id)}
                                         disabled={isSubmitted}
-                                        className={`group relative p-6 rounded-2xl border text-left transition-all duration-200 
+                                        className={`
+                                            w-full px-8 py-6 rounded-2xl font-bold text-lg text-left transition-all border-2
                                             ${selectedOptions.includes(option.id)
-                                                ? 'bg-brand-red/10 border-brand-red text-white shadow-[0_0_30px_-5px_var(--brand-red)]'
-                                                : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:border-white/20'
+                                                ? 'bg-brand-red border-brand-red text-white shadow-lg shadow-brand-red/25 scale-[1.02]'
+                                                : 'bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-white/20 hover:scale-[1.01]'
                                             }
-                                            ${isSubmitted ? 'opacity-50 cursor-not-allowed' : ''}
+                                            ${isSubmitted ? 'cursor-not-allowed opacity-50' : 'cursor-pointer active:scale-[0.99]'}
                                         `}
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-lg font-medium">{option.title}</span>
-                                            {selectedOptions.includes(option.id) && (
-                                                <CheckCircle2 className="text-brand-red" size={24} />
-                                            )}
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                                                ${selectedOptions.includes(option.id)
+                                                    ? 'border-white bg-white'
+                                                    : 'border-white/30'
+                                                }
+                                            `}>
+                                                {selectedOptions.includes(option.id) && (
+                                                    <CheckCircle2 size={16} className="text-brand-red" />
+                                                )}
+                                            </div>
+                                            <span className="flex-1">{option.title}</span>
                                         </div>
                                     </button>
                                 ))}
@@ -217,54 +323,68 @@ export default function ContestPlayPage() {
                             </div>
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center py-20 bg-white/5 rounded-3xl border border-white/10">
-                            <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center text-green-500 mb-6 animate-bounce">
-                                <CheckCircle2 size={40} />
+                        <div className="flex flex-col items-center justify-center py-24 bg-white/5 rounded-3xl border border-white/10 relative overflow-hidden group">
+                            {/* Ambient Background Glow */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-green-500/5 blur-3xl pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                            <div className="w-24 h-24 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 mb-8 relative z-10 border border-green-500/20 shadow-[0_0_40px_-10px_var(--green-500)] animate-pulse-slow">
+                                <CheckCircle2 size={48} />
                             </div>
-                            <h2 className="text-3xl font-clean font-bold mb-2">Answer Submitted!</h2>
-                            <p className="text-slate-400 text-lg">Waiting for the timer to end...</p>
-                            <div className="mt-8 flex gap-2">
-                                <span className="w-2 h-2 rounded-full bg-slate-600 animate-pulse"></span>
-                                <span className="w-2 h-2 rounded-full bg-slate-600 animate-pulse delay-75"></span>
-                                <span className="w-2 h-2 rounded-full bg-slate-600 animate-pulse delay-150"></span>
+                            <h2 className="text-4xl font-clean font-bold mb-3 text-white tracking-wide relative z-10">Answer Submitted</h2>
+                            <p className="text-slate-400 text-lg font-medium relative z-10">Relax, the next round is coming.</p>
+
+                            <div className="mt-12 flex items-center gap-3 bg-black/40 px-6 py-3 rounded-full border border-white/5 backdrop-blur-md relative z-10">
+                                <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Waiting for timer</span>
+                                <div className="flex gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce"></span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce delay-100"></span>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-bounce delay-200"></span>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {/* Leaderboard Panel - Hover Trigger Zone */}
-                <div className="fixed right-0 top-0 bottom-0 w-4 z-50 group">
+                <div className="fixed right-0 top-0 bottom-0 w-4 z-50 group hover:w-96 transition-all duration-500 ease-out">
                     {/* The Panel Itself */}
                     <div className={`
-                        absolute right-0 top-0 bottom-0 w-80 bg-black/90 backdrop-blur-xl border-l border-white/10 shadow-2xl
-                        transform transition-transform duration-300 ease-in-out translate-x-full group-hover:translate-x-0
-                        flex flex-col pt-20
+                        absolute right-0 top-0 bottom-0 w-96 bg-black/95 backdrop-blur-xl border-l border-white/10 shadow-2xl
+                        transform transition-transform duration-500 ease-out translate-x-full group-hover:translate-x-0
+                        flex flex-col pt-24 pb-8 px-6
                     `}>
-                        <div className="p-6 border-b border-white/10">
-                            <div className="flex items-center gap-3 text-brand-red">
-                                <Trophy size={20} />
-                                <h2 className="font-bold tracking-wider uppercase">Live Standings</h2>
+                        <div className="mb-8 flex items-center gap-3 text-brand-red animate-fade-in">
+                            <div className="p-2 bg-brand-red/10 rounded-lg">
+                                <Trophy size={24} />
                             </div>
+                            <h2 className="font-clean font-bold text-xl tracking-wider uppercase text-white">Live Standings</h2>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-2">
                             {leaderboard.length === 0 ? (
-                                <div className="text-center text-slate-500 py-10">Waiting for rankings...</div>
+                                <div className="text-center text-slate-500 py-10 italic">Waiting for rankings...</div>
                             ) : (
-                                leaderboard.map((user: any) => (
-                                    <div key={user.userId} className="flex items-center p-3 rounded-xl bg-white/5 border border-white/10">
+                                leaderboard.map((user: any, index) => (
+                                    <div key={user.userId} className={`
+                                        relative flex items-center p-4 rounded-xl border transition-all duration-300 hover:scale-[1.02]
+                                        ${user.rank === 1 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent border-yellow-500/20' :
+                                            user.rank === 2 ? 'bg-gradient-to-r from-slate-300/10 to-transparent border-white/10' :
+                                                user.rank === 3 ? 'bg-gradient-to-r from-orange-500/10 to-transparent border-orange-500/20' :
+                                                    'bg-white/5 border-white/5 hover:bg-white/10'}
+                                    `}>
                                         <div className={`
-                                            w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3
-                                            ${user.rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
-                                                user.rank === 2 ? 'bg-slate-300/20 text-slate-300' :
-                                                    user.rank === 3 ? 'bg-orange-600/20 text-orange-400' : 'bg-white/10 text-slate-400'}
+                                            w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg mr-4 shadow-lg
+                                            ${user.rank === 1 ? 'bg-yellow-500 text-black' :
+                                                user.rank === 2 ? 'bg-slate-300 text-black' :
+                                                    user.rank === 3 ? 'bg-orange-500 text-black' : 'bg-white/10 text-slate-400'}
                                         `}>
                                             {user.rank}
                                         </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="truncate font-medium text-slate-200">{user.name}</div>
-                                            <div className="text-xs text-slate-500">{user.score} pts</div>
+                                        <div className="flex-1 min-w-0 z-10">
+                                            <div className={`truncate font-bold ${user.rank <= 3 ? 'text-white' : 'text-slate-300'}`}>{user.name}</div>
+                                            <div className="text-xs text-slate-500 font-mono mt-0.5">{user.score} pts</div>
                                         </div>
+                                        {user.rank === 1 && <Trophy className="text-yellow-500/20 absolute right-4 w-12 h-12" />}
                                     </div>
                                 ))
                             )}
@@ -287,13 +407,24 @@ export default function ContestPlayPage() {
                     <div className="flex-1 overflow-y-auto p-4 space-y-2">
                         {/* Same list code as above - could be componentized but duplicating for speed */}
                         {leaderboard.map((user: any) => (
-                            <div key={user.userId} className="flex items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center font-bold text-sm mr-3 text-slate-300">
+                            <div key={user.userId} className={`
+                                flex items-center p-4 rounded-xl border transition-all
+                                ${user.rank === 1 ? 'bg-gradient-to-r from-yellow-500/10 to-transparent border-yellow-500/20' :
+                                    user.rank === 2 ? 'bg-gradient-to-r from-slate-300/10 to-transparent border-white/10' :
+                                        user.rank === 3 ? 'bg-gradient-to-r from-orange-500/10 to-transparent border-orange-500/20' :
+                                            'bg-white/5 border-white/5'}
+                            `}>
+                                <div className={`
+                                    w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg mr-4 shadow-lg
+                                    ${user.rank === 1 ? 'bg-yellow-500 text-black' :
+                                        user.rank === 2 ? 'bg-slate-300 text-black' :
+                                            user.rank === 3 ? 'bg-orange-500 text-black' : 'bg-white/10 text-slate-400'}
+                                `}>
                                     {user.rank}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="truncate font-medium text-slate-200">{user.name}</div>
-                                    <div className="text-xs text-slate-500">{user.score} pts</div>
+                                    <div className={`truncate font-bold ${user.rank <= 3 ? 'text-white' : 'text-slate-300'}`}>{user.name}</div>
+                                    <div className="text-xs text-slate-500 font-mono mt-0.5">{user.score} pts</div>
                                 </div>
                             </div>
                         ))}

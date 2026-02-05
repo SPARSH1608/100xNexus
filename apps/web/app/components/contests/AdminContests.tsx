@@ -37,6 +37,7 @@ export default function AdminContests() {
     const [isCreateContestModalOpen, setIsCreateContestModalOpen] = useState(false)
     const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([])
     const [isOpenAll, setIsOpenAll] = useState(false)
+    const [showResults, setShowResults] = useState(false)
     const [isUpdateContestModalOpen, setIsUpdateContestModalOpen] = useState(false)
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
     const [contestIdToDelete, setContestIdToDelete] = useState<string | null>(null)
@@ -61,7 +62,7 @@ export default function AdminContests() {
             const startTime = new Date(dataObject.startTime as string).toISOString();
 
             const batchIds = selectedBatchIds
-            const res = await createContestAPI(title as string, !!isOpenAll, startTime as string, batchIds);
+            const res = await createContestAPI(title as string, !!isOpenAll, startTime as string, batchIds, false);
             toast.success(res.message);
             setIsCreateContestModalOpen(false);
             getContests();
@@ -94,6 +95,7 @@ export default function AdminContests() {
             if (contestData) {
                 setContest(contestData);
                 setIsOpenAll(contestData.isOpenAll);
+                setShowResults(contestData.showResults || false);
                 if (contestData.batches) {
                     setSelectedBatchIds(contestData.batches.map((b: any) => b.id))
                 }
@@ -114,7 +116,7 @@ export default function AdminContests() {
             const startTime = new Date(dataObject.startTime as string).toISOString();
 
             const batchIds = selectedBatchIds
-            await updateContest(contest.id, title as string, !!isOpenAll, startTime as string, batchIds);
+            await updateContest(contest.id, title as string, !!isOpenAll, startTime as string, batchIds, showResults);
             if (status && status !== contest.status) {
                 await changeContestStatus(contest.id, status as string)
             }
@@ -480,6 +482,28 @@ export default function AdminContests() {
                                     <p className="text-xs text-slate-500 mt-2">Click to toggle access permissions.</p>
                                 </div>
                             )}
+
+                            <div>
+                                <label className="block text-xs font-mono text-slate-500 mb-3 uppercase">Results Display</label>
+                                <div
+                                    onClick={() => setShowResults(!showResults)}
+                                    className={`cursor-pointer border rounded-xl p-4 transition-all hover:bg-white/5 flex items-center justify-between ${showResults ? 'border-brand-red bg-brand-red/5' : 'border-white/10 bg-[#111]'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Check size={20} className={showResults ? "text-brand-red" : "text-slate-500"} />
+                                        <div>
+                                            <span className="font-bold text-white block text-sm">Show Results After Question</span>
+                                            <p className="text-xs text-slate-500">Display voting results for 5s after each question.</p>
+                                        </div>
+                                    </div>
+                                    <div className={`w-10 h-6 rounded-full p-1 transition-colors ${showResults ? 'bg-brand-red' : 'bg-white/10'
+                                        }`}>
+                                        <div className={`w-4 h-4 rounded-full bg-white transition-transform ${showResults ? 'translate-x-4' : 'translate-x-0'
+                                            }`} />
+                                    </div>
+                                </div>
+                            </div>
 
                             <button
                                 type="submit"
