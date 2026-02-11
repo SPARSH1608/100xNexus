@@ -4,6 +4,7 @@ import ImageSphere from "../../../../components/ImageSphere";
 import Sidebar from "../../../components/layout/sidebar";
 import { useEffect, useState } from "react";
 import { getContestByIdAPI, joinContestAPI } from "../../../api";
+import { Code2, Clock, Users, Zap } from "lucide-react";
 
 // Use local avatar images for better reliability
 const AVATARS = Array.from({ length: 20 }).map((_, i) =>
@@ -21,11 +22,9 @@ export default function ContestPage() {
     useEffect(() => {
         const fetchContest = async () => {
             try {
-                // Try to join the contest first
                 try {
                     await joinContestAPI(id as string);
                 } catch (e) {
-                    // Ignore already joined errors, but log others
                     console.error("Join warning:", e);
                 }
 
@@ -50,7 +49,6 @@ export default function ContestPage() {
 
         fetchContest();
 
-        // Poll for status updates every 5 seconds
         const pollInterval = setInterval(async () => {
             try {
                 const data = await getContestByIdAPI(id as string);
@@ -92,57 +90,72 @@ export default function ContestPage() {
     }, [contest]);
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans overflow-hidden relative">
+        <div className="min-h-screen bg-black text-white font-sans overflow-hidden relative selection:bg-brand-red/30">
             <Sidebar />
 
-            {/* Background Sphere */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none grayscale">
                 <ImageSphere images={AVATARS} />
             </div>
 
-            {/* Overlay Content */}
-            <div className="relative z-10 container mx-auto px-4 h-full min-h-screen flex flex-col justify-center items-center pointer-events-none md:pl-24">
-                <div className="glass-card p-8 md:p-12 rounded-[2rem] text-center max-w-2xl w-full border border-white/10 backdrop-blur-md bg-black/40 pointer-events-auto">
-                    <div className="mb-4">
-                        <span className="inline-block w-3 h-3 rounded-full bg-green-500 animate-pulse mr-2"></span>
-                        <span className="text-sm font-mono uppercase tracking-widest text-slate-400">Waiting Room</span>
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black/80 via-black/50 to-black pointer-events-none z-0" />
+
+
+            <div className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center p-6">
+                <div className="max-w-xl w-full text-center">
+
+                    <div className="w-20 h-20 mx-auto mb-8 bg-gradient-to-tr from-white/10 to-white/5 rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl backdrop-blur-md animate-in zoom-in duration-700">
+                        <Code2 size={40} className="text-white opacity-90" />
                     </div>
 
-                    <h1 className="text-4xl md:text-6xl font-clean font-bold mb-6">
+                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-white mb-6 animate-in slide-in-from-bottom-4 duration-700 delay-100">
                         {contest ? (
-                            <>
-                                Contest <span className="text-brand-red font-cursive">#{contest.title}</span>
-                            </>
-                        ) : error ? (
-                            <span className="text-red-500 text-3xl">{error}</span>
+                            <span>{contest.title}</span>
                         ) : (
-                            <span className="animate-pulse">Loading Contest...</span>
+                            <span className="animate-pulse opacity-50">Loading...</span>
                         )}
                     </h1>
 
-                    <p className="font-clean text-xl text-slate-300 mb-8 max-w-lg mx-auto leading-relaxed">
-                        The arena is preparing. Gladiators are gathering. Prepare your algorithms for the ultimate showdown.
+                    <p className="text-slate-400 text-lg mb-12 font-medium tracking-wide animate-in slide-in-from-bottom-4 duration-700 delay-200">
+                        The session will begin shortly.
                     </p>
 
-                    <div className="flex justify-center gap-4 mb-8">
-                        <div className="flex flex-col items-center">
-                            <span className="text-3xl font-bold text-white">{participants}</span>
-                            <span className="text-xs uppercase text-slate-500 tracking-wider">Players Ready</span>
+                    <div className="grid grid-cols-2 gap-4 mb-12 animate-in slide-in-from-bottom-4 duration-700 delay-300">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl flex flex-col items-center">
+                            <div className="flex items-center gap-2 text-slate-400 mb-2 uppercase tracking-widest text-xs font-bold">
+                                <Users size={14} />
+                                <span>Participants</span>
+                            </div>
+                            <div className="text-3xl font-bold text-white tabular-nums">
+                                {participants}
+                            </div>
                         </div>
-                        <div className="w-px h-12 bg-white/10"></div>
-                        <div className="flex flex-col items-center">
-                            <span className="text-3xl font-bold text-white font-mono">{timeLeft}</span>
-                            <span className="text-xs uppercase text-slate-500 tracking-wider">Time to Start</span>
+
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-2xl flex flex-col items-center">
+                            <div className="flex items-center gap-2 text-slate-400 mb-2 uppercase tracking-widest text-xs font-bold">
+                                <Clock size={14} />
+                                <span>Starts In</span>
+                            </div>
+                            <div className="text-3xl font-bold text-white tabular-nums font-mono">
+                                {timeLeft}
+                            </div>
                         </div>
                     </div>
 
-                    <button disabled className="bg-brand-red/50 cursor-not-allowed text-white px-8 py-3 rounded-full font-bold transition-all shadow-lg border border-white/10">
-                        Waiting for Host
-                    </button>
+                    <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium animate-in fade-in duration-1000 delay-500">
+                        <div className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        </div>
+                        Waiting for host to start session
+                    </div>
+
+                    {error && (
+                        <div className="mt-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                            {error}
+                        </div>
+                    )}
                 </div>
             </div>
-
-            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
         </div>
     );
 }

@@ -94,9 +94,22 @@ export class ContestManager {
                 res.write(`data: ${JSON.stringify({ type: 'QUESTION', payload })}\n\n`)
             }
 
-            // Stream Leaderboard
             const leaderboard = await this.redis.zrevrange(this.leaderboardKey(contestId), 0, 19, 'withscores')
-            const userIds = leaderboard.map((entry: any) => entry[0]);
+
+            const leaderboardData: { userId: string, score: number, rank: number, name: string }[] = []
+            const userIds: string[] = []
+
+            for (let i = 0; i < leaderboard.length; i += 2) {
+                const userId = leaderboard[i] as string;
+                const score = Number(leaderboard[i + 1]);
+                userIds.push(userId);
+                leaderboardData.push({
+                    userId,
+                    score,
+                    rank: (i / 2) + 1,
+                    name: 'Anonymous' 
+                })
+            }
 
             const users = await this.prisma.user.findMany({
                 where: { id: { in: userIds } },
@@ -104,12 +117,10 @@ export class ContestManager {
             })
             const userMap = new Map(users.map(u => [u.id, u.name]))
 
-            const leaderboardData = leaderboard.map((entry: any, index: number) => ({
-                userId: entry[0],
-                name: userMap.get(entry[0]) || 'Anonymous',
-                score: Number(entry[1]),
-                rank: index + 1
-            }))
+            leaderboardData.forEach(entry => {
+                entry.name = userMap.get(entry.userId) || 'Anonymous'
+            })
+
             res.write(`data: ${JSON.stringify({ type: 'LEADERBOARD', payload: leaderboardData })}\n\n`)
 
             if (isStreamActive) setTimeout(tick, 2000)
@@ -276,57 +287,34 @@ export class ContestManager {
     }
     async getLeaderboard(contestId: string) {
         const leaderboard = await this.redis.zrevrange(this.leaderboardKey(contestId), 0, -1, 'withscores')
-        console.log('get leaderboard', leaderboard)
+        // console.log('get leaderboard raw', leaderboard)
+
+        const result = []
         const userIds: string[] = []
-        for (let i = 0; i < leaderboard.length; i++) {
-            const entry = leaderboard[i] as any;
-            if (Array.isArray(entry)) {
-                if (entry[0]) userIds.push(entry[0]);
-            } else {
-                // Fallback if flat? (unlikely)
-                // If flat, i should skip 2.
-            }
+
+        // Handle flat array response from Redis (user, score, user, score...)
+        for (let i = 0; i < leaderboard.length; i += 2) {
+            const userId = leaderboard[i] as string;
+            const score = Number(leaderboard[i + 1]);
+            userIds.push(userId);
+            result.push({
+                userId,
+                score,
+                rank: (i / 2) + 1,
+                name: 'Anonymous'
+            })
         }
+
         const users = await this.prisma.user.findMany({
             where: { id: { in: userIds } },
             select: { id: true, name: true }
         })
         const userMap = new Map(users.map(u => [u.id, u.name]))
 
-        const result = []
-        for (let i = 0; i < leaderboard.length; i++) {
-            // Handle Bun Redis format which might be [[val, score], [val, score]]
-            // OR confirm if it is flat. The generic fix checking for type is safer,
-            // but based on error logs it is nested.
-            // However, to be safe for both (if swapped later), we can check types.
-            // But strictly following the error pattern: nested.
-            const entry = leaderboard[i] as any;
-            let userId, score;
-            if (Array.isArray(entry)) {
-                userId = entry[0];
-                score = entry[1];
-            } else {
-                // Fallback if it is flat and we are iterating incorrectly?
-                // No, if it is flat, i should increment by 2.
-                // Assuming nested based on error log.
-                userId = entry;
-                // this branch would fail if it is actually flat.
-                // Let us stick to the finding: it is nested.
-                // Wait, if it is nested, we loop i++ (which we are doing here).
-                // In the original code i+=2 which implies flat.
-                // So we change loop to i++ and access entry[0], entry[1].
-                score = 0; // Default? It should be in the entry.
-            }
+        result.forEach(entry => {
+            entry.name = userMap.get(entry.userId) || 'Anonymous'
+        })
 
-            if (userId) {
-                result.push({
-                    userId: userId,
-                    name: userMap.get(userId) || 'Anonymous',
-                    score: Number(score),
-                    rank: i + 1
-                })
-            }
-        }
         return result;
     }
 
@@ -342,25 +330,20 @@ export class ContestManager {
         }
 
         const leaderboard = await this.redis.zrevrange(this.leaderboardKey(contestId), 0, -1, 'withscores')
-        console.log('leaderboard after finish', leaderboard)
+        // console.log('leaderboard after finish', leaderboard)
         const result = []
-        for (let i = 0; i < leaderboard.length; i++) {
-            const entry = leaderboard[i] as any;
-            let userId, score;
-            if (Array.isArray(entry)) {
-                userId = entry[0];
-                score = entry[1];
-            } else {
-                // Should not happen based on logs, but if so:
-                continue;
-            }
+
+        // Handle flat array response from Redis (user, score, user, score...)
+        for (let i = 0; i < leaderboard.length; i += 2) {
+            const userId = leaderboard[i] as string;
+            const score = Number(leaderboard[i + 1]);
 
             if (userId) {
                 result.push({
                     contestId,
                     userId,
-                    finalScore: Number(score),
-                    rank: i + 1
+                    finalScore: score,
+                    rank: (i / 2) + 1
                 })
             }
         }

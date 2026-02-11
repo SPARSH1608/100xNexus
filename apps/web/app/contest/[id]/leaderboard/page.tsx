@@ -2,8 +2,8 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Sidebar from '../../../components/layout/sidebar';
-import { Trophy, Medal, Star } from 'lucide-react';
-import { getLeaderboardAPI } from '../../../api'; // Assuming this API function needs to be created or I'll just fetch directly for now if not exists
+import { Trophy } from 'lucide-react';
+import { getLeaderboardAPI } from '../../../api';
 
 export default function LeaderboardPage() {
     const { id } = useParams();
@@ -29,96 +29,98 @@ export default function LeaderboardPage() {
         }
     }, [id]);
 
-    const getRankIcon = (index: number) => {
-        switch (index) {
-            case 0: return <Trophy className="text-yellow-400 w-8 h-8" />;
-            case 1: return <Medal className="text-slate-300 w-8 h-8" />;
-            case 2: return <Medal className="text-amber-600 w-8 h-8" />;
-            default: return <span className="text-slate-500 font-mono font-bold w-8 text-center">{index + 1}</span>;
-        }
-    };
-
     return (
         <div className="min-h-screen bg-black text-white font-sans selection:bg-brand-red/30">
             <Sidebar />
 
-            <div className="w-full px-6 md:px-12 pt-32 md:pt-12 md:pl-24 pb-12">
-                <div className="text-center mb-12 animate-fade-in-up">
-                    <div className="inline-flex items-center justify-center p-4 rounded-full bg-brand-red/10 text-brand-red mb-6 border border-brand-red/20 shadow-[0_0_30px_-5px_var(--brand-red)]">
-                        <Trophy size={48} />
+            <div className="w-full px-6 md:px-12 pt-32 md:pt-12 md:pl-24 pb-12 min-h-screen relative overflow-hidden">
+                <div className="text-center mb-16 animate-in slide-in-from-top-10 duration-700 relative z-10">
+                    <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 mb-6 backdrop-blur-md">
+                        <Trophy size={14} />
+                        <span className="font-medium text-xs tracking-wide uppercase">Official Results</span>
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-clean font-bold mb-4 bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent">
-                        Contest Results
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-4">
+                        Leaderboard
                     </h1>
-                    <p className="text-slate-400 text-lg">The dust has settled. Here are the champions.</p>
+                    <p className="text-slate-400 text-lg font-normal max-w-2xl mx-auto leading-relaxed">
+                        Top performers from the latest session.
+                    </p>
                 </div>
 
                 {loading ? (
-                    <div className="space-y-4">
+                    <div className="max-w-3xl mx-auto space-y-3">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse" />
+                            <div key={i} className="h-20 bg-white/5 rounded-2xl animate-pulse border border-white/5" />
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b border-white/10 bg-white/5">
-                                        <th className="px-6 py-4 text-left text-sm font-mono text-slate-400 uppercase tracking-wider">Rank</th>
-                                        <th className="px-6 py-4 text-left text-sm font-mono text-slate-400 uppercase tracking-wider">Gladiator</th>
-                                        <th className="px-6 py-4 text-right text-sm font-mono text-slate-400 uppercase tracking-wider">Score</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-white/5">
-                                    {leaderboard.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={3} className="px-6 py-12 text-center text-slate-500">
-                                                No participants found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        leaderboard.map((user, index) => (
-                                            <tr
-                                                key={user.userId}
-                                                className={`
-                                                    group transition-colors hover:bg-white/5
-                                                    ${index < 3 ? 'bg-gradient-to-r from-white/5 to-transparent' : ''}
-                                                `}
-                                            >
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-4">
-                                                        {getRankIcon(index)}
-                                                        {index < 3 && <Star className="w-4 h-4 text-yellow-500/50 animate-pulse" />}
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center">
-                                                        <div className={`
-                                                            w-10 h-10 rounded-full mr-4 flex items-center justify-center font-bold text-sm
-                                                            ${index === 0 ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30' :
-                                                                'bg-white/10 text-slate-300 border border-white/10'}
-                                                        `}>
-                                                            {user.name?.slice(0, 2).toUpperCase() || 'AN'}
-                                                        </div>
-                                                        <div className="font-medium text-slate-200 group-hover:text-white transition-colors">
-                                                            {user.name}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                    <span className={`
-                                                        text-xl font-mono font-bold
-                                                        ${index === 0 ? 'text-brand-red' : 'text-slate-300'}
-                                                    `}>
-                                                        {user.score}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                    <div className="max-w-4xl mx-auto relative z-10 text-white">
+                        {leaderboard.length > 0 && (
+                            <div className="flex flex-col md:flex-row items-end justify-center gap-6 mb-16 px-4">
+                                {leaderboard[1] && (
+                                    <div className="order-2 md:order-1 flex-1 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-100">
+                                        <div className="mb-4 text-center">
+                                            <div className="font-semibold text-slate-200 text-base">{leaderboard[1].name}</div>
+                                            <div className="text-slate-500 text-sm font-medium">{leaderboard[1].score} pts</div>
+                                        </div>
+                                        <div className="w-full h-32 bg-gradient-to-t from-slate-800/50 to-slate-800/20 rounded-t-2xl border-x border-t border-white/5 relative flex items-end justify-center pb-4 backdrop-blur-sm">
+                                            <div className="text-4xl font-bold text-slate-700/50">2</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {leaderboard[0] && (
+                                    <div className="order-1 md:order-2 flex-[1.2] flex flex-col items-center animate-in slide-in-from-bottom-12 duration-700 z-10 shadow-2xl shadow-yellow-500/5">
+                                        <div className="mb-6 text-center">
+                                            <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-3" strokeWidth={1.5} />
+                                            <div className="font-bold text-white text-xl tracking-tight">{leaderboard[0].name}</div>
+                                            <div className="text-yellow-500/80 text-sm font-medium">{leaderboard[0].score} pts</div>
+                                        </div>
+                                        <div className="w-full h-48 bg-gradient-to-t from-yellow-500/10 to-transparent rounded-t-2xl border-x border-t border-white/10 relative flex items-end justify-center pb-6 backdrop-blur-md">
+                                            <div className="text-6xl font-bold text-yellow-500/10">1</div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {leaderboard[2] && (
+                                    <div className="order-3 flex-1 flex flex-col items-center animate-in slide-in-from-bottom-8 duration-700 delay-200">
+                                        <div className="mb-4 text-center">
+                                            <div className="font-semibold text-slate-200 text-base">{leaderboard[2].name}</div>
+                                            <div className="text-slate-500 text-sm font-medium">{leaderboard[2].score} pts</div>
+                                        </div>
+                                        <div className="w-full h-24 bg-gradient-to-t from-orange-900/20 to-transparent rounded-t-2xl border-x border-t border-white/5 relative flex items-end justify-center pb-4 backdrop-blur-sm">
+                                            <div className="text-4xl font-bold text-orange-900/30">3</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            {leaderboard.slice(3).map((user, index) => (
+                                <div
+                                    key={user.userId}
+                                    className="group flex items-center p-5 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 rounded-2xl transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 backdrop-blur-sm"
+                                    style={{ animationDelay: `${(index + 3) * 50}ms` }}
+                                >
+                                    <div className="font-medium text-slate-500 text-lg w-12 text-center">{user.rank}</div>
+                                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-slate-300 font-medium text-sm mr-6 border border-white/5 group-hover:border-white/20 transition-colors">
+                                        {user.name?.charAt(0)}
+                                    </div>
+                                    <div className="flex-1 font-medium text-lg text-slate-200 group-hover:text-white transition-colors">
+                                        {user.name}
+                                    </div>
+                                    <div className="font-semibold text-slate-400 group-hover:text-white transition-colors text-lg">
+                                        {user.score}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {leaderboard.length === 0 && (
+                                <div className="text-center py-32 bg-white/5 rounded-3xl border border-white/5">
+                                    <p className="text-slate-500 font-medium">No results data available.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
