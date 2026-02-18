@@ -2,20 +2,33 @@ import Sidebar from "../layout/sidebar";
 import { motion } from "framer-motion"
 import Link from "next/link";
 import { Play, Clock, BarChart3, ChevronRight, Trophy, Calendar, Zap, Target } from "lucide-react";
-import { useContestStore } from "../../store";
+import { useAuthStore, useContestStore } from "../../store";
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 export default function CandidateDashboard() {
     const { myContests, getMyContests } = useContestStore()
+    const { token } = useAuthStore()
     const [isLoading, setIsLoading] = useState(true)
+    const [interviews, setInterviews] = useState<any[]>([])
 
     useEffect(() => {
         const fetch = async () => {
             await getMyContests()
+            if (token) {
+                try {
+                    const res = await axios.get(`http://localhost:3001/interview/my-interviews`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                    setInterviews(res.data.interviews)
+                } catch (e) {
+                    console.error("Failed to fetch interviews", e)
+                }
+            }
             setIsLoading(false)
         }
         fetch()
-    }, [])
+    }, [token])
 
     const liveContests = myContests.filter((c: any) => c.status === 'LIVE')
     const upcomingContests = myContests.filter((c: any) => c.status === 'PUBLISHED' || (c.status === 'LIVE' && !liveContests.includes(c)))
@@ -46,6 +59,56 @@ export default function CandidateDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
+                        {/* Interviews Section */}
+                        {interviews.length > 0 && (
+                            <div className="space-y-4">
+                                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Calendar className="text-brand-red" size={20} /> Upcoming Interviews
+                                </h2>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {interviews.map((interview) => (
+                                        <div key={interview.id} className="bg-[#111] border border-white/5 p-5 rounded-2xl hover:border-brand-red/30 transition-all group relative overflow-hidden">
+                                            <div className="flex justify-between items-start mb-3 relative z-10">
+                                                <h3 className="font-bold text-lg text-white">{interview.topic}</h3>
+                                                <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wide bg-white/5 ${interview.status === 'SCHEDULED' ? 'text-blue-400' : 'text-slate-400'}`}>
+                                                    {interview.status}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-slate-400 text-sm mb-4 relative z-10">
+                                                <Clock size={14} />
+                                                {new Date(interview.startTime).toLocaleString()}
+                                            </div>
+                                            {(() => {
+                                                const start = new Date(interview.startTime).getTime();
+                                                const now = new Date().getTime();
+                                                const diffMinutes = (start - now) / (1000 * 60);
+                                                const isJoinable = diffMinutes <= 5;
+
+                                                return (
+                                                    <Link href={isJoinable ? `/interview/${interview.id}` : '#'} className="relative z-10 block" onClick={(e) => !isJoinable && e.preventDefault()}>
+                                                        <button
+                                                            disabled={!isJoinable}
+                                                            className={`w-full py-2 rounded-xl transition-all text-sm font-bold flex items-center justify-center gap-2 
+                                                                ${isJoinable
+                                                                    ? 'bg-white/5 hover:bg-brand-red hover:text-white group-hover:shadow-lg shadow-brand-red/20 cursor-pointer'
+                                                                    : 'bg-white/5 text-slate-500 cursor-not-allowed opacity-50'}`}
+                                                        >
+                                                            {isJoinable ? (
+                                                                <>Join Room <ChevronRight size={14} /></>
+                                                            ) : (
+                                                                <>Starts in {Math.ceil(diffMinutes)} mins</>
+                                                            )}
+                                                        </button>
+                                                    </Link>
+                                                );
+                                            })()}
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-brand-red/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Live Contests Carousel */}
                         {liveContests.length > 0 ? (
                             <div className="space-y-4">

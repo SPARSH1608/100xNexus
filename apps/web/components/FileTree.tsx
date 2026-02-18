@@ -19,6 +19,7 @@ export type FileSystemItem = {
     children?: FileSystemItem[];
     content?: string;
     isOpen?: boolean;
+    path?: string;
 };
 
 interface FileTreeProps {
@@ -26,9 +27,10 @@ interface FileTreeProps {
     onSelect: (item: FileSystemItem) => void;
     onUpdate: (items: FileSystemItem[]) => void;
     socket: Socket | null;
+    interviewId: string;
 }
 
-export default function FileTree({ items, onSelect, onUpdate, socket }: FileTreeProps) {
+export default function FileTree({ items, onSelect, onUpdate, socket, interviewId }: FileTreeProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [draggedItem, setDraggedItem] = useState<FileSystemItem | null>(null);
 
@@ -49,21 +51,36 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
         if (item.type === 'folder') {
             onUpdate(toggleFolder(item.id, items));
             if (socket) {
-                socket.emit(item.isOpen ? "folder:collapsed" : "folder:expanded", { id: item.id });
+                socket.emit(item.isOpen ? "folder:collapsed" : "folder:expanded", { interviewId, id: item.id });
             }
         }
         onSelect(item);
         setSelectedId(item.id);
     };
 
+    const findPathById = (id: string, currentItems: FileSystemItem[]): string | null => {
+        for (const item of currentItems) {
+            if (item.id === id) return item.path || null;
+            if (item.children) {
+                const found = findPathById(id, item.children);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
     const addItem = (parentId: string | null, type: 'file' | 'folder') => {
         const name = prompt(`Enter ${type} name:`);
         if (!name) return;
+
+        const parentPath = parentId ? findPathById(parentId, items) : '/';
+        const newPath = `${parentPath}${parentPath?.endsWith('/') ? '' : '/'}${name}`;
 
         const newItem: FileSystemItem = {
             id: Math.random().toString(36).substr(2, 9),
             name,
             type,
+            path: newPath,
             content: type === 'file' ? '// New file' : undefined,
             children: type === 'folder' ? [] : undefined,
             isOpen: true
@@ -88,9 +105,11 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
 
         if (socket) {
             socket.emit(type === 'folder' ? "folder:created" : "file:created", {
+                interviewId,
                 parentId,
                 name,
                 id: newItem.id,
+                path: newPath, // Crucial: send the path
                 type
             });
         }
@@ -99,6 +118,8 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
     const deleteItem = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (!confirm('Are you sure you want to delete this?')) return;
+
+        const path = findPathById(id, items);
 
         const deleteFromItems = (currentItems: FileSystemItem[]): FileSystemItem[] => {
             return currentItems.filter(item => item.id !== id).map(item => {
@@ -112,13 +133,15 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
         onUpdate(deleteFromItems(items));
 
         if (socket) {
-            socket.emit("file:deleted", { id });
+            socket.emit("file:deleted", { interviewId, id, path });
         }
     };
 
     const renameItem = (e: React.MouseEvent, id: string, type: 'file' | 'folder') => {
         e.stopPropagation();
-        const newName = prompt(`Enter new ${type} name:`);
+        const currentPath = findPathById(id, items);
+        const name = items.find(i => i.id === id)?.name;
+        const newName = prompt(`Enter new ${type} name:`, name);
         if (!newName) return;
 
         const renameInItems = (currentItems: FileSystemItem[]): FileSystemItem[] => {
@@ -136,7 +159,7 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
         onUpdate(renameInItems(items));
 
         if (socket) {
-            socket.emit("file:renamed", { id, newName });
+            socket.emit("file:renamed", { interviewId, id, path: currentPath, newName });
         }
     };
 
@@ -206,6 +229,7 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
 
         if (socket) {
             socket.emit("file:moved", {
+                interviewId,
                 id: draggedItem.id,
                 newParentId
             });
@@ -214,7 +238,7 @@ export default function FileTree({ items, onSelect, onUpdate, socket }: FileTree
         setDraggedItem(null);
     };
 
-        const renderTree = (currentItems: FileSystemItem[], depth = 0) => {
+    const renderTree = (currentItems: FileSystemItem[], depth = 0) => {
         return currentItems.map(item => (
             <div key={item.id} style={{ paddingLeft: `${depth * 8 + 12}px` }}>
                 <div

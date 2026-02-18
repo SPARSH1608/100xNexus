@@ -6,7 +6,7 @@ import { NAV_ITEMS } from "../../config/navigation"
 import { useRouter, usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
-import { Menu, X, LogOut, Code2, User, Settings, ChevronRight, LogIn, ChevronLeft, LayoutDashboard, Trophy, Layers, Users, FileQuestion, History, Swords } from "lucide-react"
+import { Menu, X, LogOut, Code2, User, Settings, ChevronRight, LogIn, ChevronLeft, LayoutDashboard, Trophy, Layers, Users, FileQuestion, History, Swords, Video } from "lucide-react"
 
 const ICON_MAP: Record<string, any> = {
     "Dashboard": LayoutDashboard,
@@ -15,7 +15,8 @@ const ICON_MAP: Record<string, any> = {
     "Students": Users,
     "Questions": FileQuestion,
     "My Contests": Swords,
-    "History": History
+    "History": History,
+    "Interviews": Video
 }
 
 export default function Sidebar() {

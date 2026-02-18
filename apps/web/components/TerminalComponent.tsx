@@ -21,104 +21,7 @@ export default function TerminalComponent({ socket, files = [], setFiles }: Term
     const [tabs, setTabs] = useState([{ id: '1', name: 'Terminal 1' }]);
     const [activeTabId, setActiveTabId] = useState('1');
 
-    const currentPathRef = useRef<string>("/");
     const userInputRef = useRef<string>("");
-
-    const resolvePath = (path: string): FileSystemItem[] | null => {
-        if (path === "/") return files;
-
-        const parts = path.split("/").filter(p => p);
-        let current: FileSystemItem[] | undefined = files;
-
-        for (const part of parts) {
-            const found: FileSystemItem | undefined = current?.find(item => item.name === part && item.type === 'folder');
-            if (found) {
-                current = found.children;
-            } else {
-                return null;
-            }
-        }
-        return current || null;
-    };
-
-    const handleCommand = (cmd: string, term: XTerm) => {
-        if (socket && cmd.trim()) {
-            socket.emit("terminal:command", {
-                command: cmd,
-                path: currentPathRef.current
-            });
-        }
-
-        const parts = cmd.trim().split(/\s+/);
-        const command = parts[0];
-        const args = parts.slice(1);
-
-        switch (command) {
-            case "ls":
-                const items = resolvePath(currentPathRef.current);
-                if (items) {
-                    const output = items.map(item => {
-                        return item.type === 'folder' ? `\x1b[1;34m${item.name}\x1b[0m` : item.name;
-                    }).join("  ");
-                    term.writeln(output);
-                } else {
-                    term.writeln(`Error access path: ${currentPathRef.current}`);
-                }
-                break;
-            case "pwd":
-                term.writeln(currentPathRef.current);
-                break;
-            case "cd":
-                const target = args[0];
-                if (!target || target === "/") {
-                    currentPathRef.current = "/";
-                } else if (target === "..") {
-                    const pathParts = currentPathRef.current.split("/").filter(p => p);
-                    pathParts.pop();
-                    currentPathRef.current = "/" + pathParts.join("/");
-                    if (currentPathRef.current === "") currentPathRef.current = "/";
-                } else {
-                    const potentialPath = currentPathRef.current === "/"
-                        ? `/${target}`
-                        : `${currentPathRef.current}/${target}`;
-
-                    const resolved = resolvePath(potentialPath);
-                    if (resolved) {
-                        currentPathRef.current = potentialPath;
-                    } else {
-                        term.writeln(`cd: no such file or directory: ${target}`);
-                    }
-                }
-                break;
-            case "mkdir":
-                const dirName = args[0];
-                if (dirName && setFiles) {
-                    if (currentPathRef.current === "/") {
-                        const newItem: FileSystemItem = {
-                            id: Math.random().toString(36).substr(2, 9),
-                            name: dirName,
-                            type: 'folder',
-                            children: [],
-                            isOpen: true
-                        };
-                        setFiles([...files, newItem]);
-                    } else {
-                        term.writeln("mkdir: currently only supported at root level in this demo");
-                    }
-                }
-                break;
-            case "":
-                break;
-            default:
-                if (socket) {
-                    socket.emit("run:command", cmd);
-                } else {
-                    term.writeln(`command not found: ${command}`);
-                }
-                break;
-        }
-        term.write(`\n${currentPathRef.current === '/' ? '~' : currentPathRef.current} $ `);
-    };
 
     useEffect(() => {
         if (!terminalRef.current) return;
@@ -131,62 +34,82 @@ export default function TerminalComponent({ socket, files = [], setFiles }: Term
             },
             fontSize: 14,
             fontFamily: 'monospace',
-            rows: 10,
+            rows: 24,
         });
 
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
-        term.open(terminalRef.current);
-        fitAddon.fit();
 
-        term.writeln('Welcome to the Interview Terminal');
-        term.write('~ $ ');
+        // Ensure term is opened before fit
+        term.open(terminalRef.current);
+
+        // Small delay to ensure container is rendered
+        const initialFitTimeout = setTimeout(() => {
+            try {
+                fitAddon.fit();
+            } catch (e) {
+                console.warn("Initial fit failed:", e);
+            }
+        }, 50);
 
         term.onData((data: string) => {
-            const code = data.charCodeAt(0);
-            if (code === 13) { // Enter
-                term.write('\r\n');
-                handleCommand(userInputRef.current, term);
-                userInputRef.current = "";
-            } else if (code === 127) { // Backspace
-                if (userInputRef.current.length > 0) {
-                    userInputRef.current = userInputRef.current.slice(0, -1);
-                    term.write('\b \b');
-                }
-            } else {
-                userInputRef.current += data;
-                term.write(data);
+            if (socket) {
+                // Send raw data to the backend PTY
+                socket.emit("terminal:input", { input: data });
             }
         });
 
         if (socket) {
+            // Remove any existing listener before adding a new one
+            socket.off("terminal:output");
             socket.on("terminal:output", (data: string) => {
-                term.write(data);
+                if (xtermRef.current) {
+                    xtermRef.current.write(data);
+                }
             });
         }
 
         xtermRef.current = term;
 
         const handleResize = () => {
-            fitAddon.fit();
-            if (socket) {
-                const dims = fitAddon.proposeDimensions();
-                if (dims) {
-                    socket.emit("terminal:resize", dims);
+            if (!xtermRef.current) return;
+            try {
+                fitAddon.fit();
+                if (socket) {
+                    const dims = fitAddon.proposeDimensions();
+                    if (dims) {
+                        socket.emit("terminal:resize", dims);
+                    }
                 }
+            } catch (err) {
+                console.warn("Fit failed:", err);
             }
         };
+
         window.addEventListener('resize', handleResize);
-        setTimeout(handleResize, 100);
 
         return () => {
+            clearTimeout(initialFitTimeout);
             term.dispose();
             window.removeEventListener('resize', handleResize);
-            if (socket) {
-                socket.off("terminal:output");
-            }
         };
-    }, [files]);
+    }, []);
+
+    // Separate effect for socket listeners to avoid re-initializing terminal on socket change
+    useEffect(() => {
+        if (!socket || !xtermRef.current) return;
+
+        const handleTerminalOutput = (data: string) => {
+            xtermRef.current?.write(data);
+        };
+
+        socket.off("terminal:output");
+        socket.on("terminal:output", handleTerminalOutput);
+
+        return () => {
+            socket.off("terminal:output", handleTerminalOutput);
+        };
+    }, [socket]);
 
     useEffect(() => {
         setTimeout(() => { }, 100);
